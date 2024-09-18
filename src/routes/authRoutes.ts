@@ -1,35 +1,34 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { HTTPException } from "hono/http-exception";
-import { sign } from "hono/jwt";
+import { authenticateLogin } from "../services/authService";
 
 const loginSchema = z.object({
+  role: z.string(),
   email: z.string(),
   password: z.string(),
 });
 
-const authRoute = new Hono();
+export type LoginSchema = z.infer<typeof loginSchema>;
+
+export const authRoute = new Hono();
 
 authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
-  const { email, password } = c.req.valid("json");
+  try {
+    const data = c.req.valid("json");
+    const result = await authenticateLogin(data);
 
-  /**  FETCH USER BY EMAIL */
-  // code goes here
+    if (result === null || result === false) {
+      c.status(400);
+      return c.text("Invalid credentials");
+    }
 
-  if (password !== "admin") {
-    throw new HTTPException(400, { message: "Invalid credentials" });
+    return c.json({
+      token: result,
+    });
+  } catch (error) {
+    console.log(error);
+    c.status(500);
+    return c.text("Something went wrong, please try again");
   }
-
-  const payload = {
-    email,
-    role: "admin", // replace with user role in payload
-    exp: Math.floor(Date.now() / 1000) + 60 * 60,
-  };
-
-  const token = await sign(payload, Bun.env.JWT_SECRET || "");
-  return c.json({
-    payload,
-    token,
-  });
 });

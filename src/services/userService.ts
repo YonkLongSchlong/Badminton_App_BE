@@ -1,147 +1,57 @@
-import { eq } from "drizzle-orm/pg-core/expressions";
-import { users } from "../db/schema";
-import * as schema from "../db/schema";
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import type { User } from "../routes/userRoutes";
-import type { ApiResponse } from "../../types";
+import { db } from "../db";
+import {
+  user,
+  type UserCreateSchema,
+  type UserPasswordSchema,
+  type UserUpdateSchema,
+} from "../db/schema/user";
+import { eq } from "drizzle-orm";
+import { compare, genSalt, hash } from "bcrypt";
 
-export interface UserService {
-  getAllUser(): Promise<ApiResponse>;
-  getUser(id: number): Promise<ApiResponse>;
-  createUser(data: any): Promise<ApiResponse>;
-  updateUser(id: number, data: any): Promise<ApiResponse>;
-  deleteUser(id: number): Promise<ApiResponse>;
-}
+export const createUser = async (data: UserCreateSchema) => {
+  const [result] = await db.insert(user).values(data).returning();
+  return result.id;
+};
 
-type NewUser = typeof users.$inferInsert;
+export const getUser = async (id: number) => {
+  const user = await getUserById(id);
+  if (user === undefined) return null;
+  user.password = "";
+  return user;
+};
 
-export class UserServiceImpl implements UserService {
-  private db: PostgresJsDatabase<typeof schema>;
+export const updateUser = async (id: number, data: UserUpdateSchema) => {
+  const userToUpdate = await getUserById(id);
+  if (userToUpdate === undefined) return null;
+  const [result] = await db
+    .update(user)
+    .set(data)
+    .where(eq(user.id, id))
+    .returning();
+  result.password = "";
+  return result;
+};
 
-  constructor(db: PostgresJsDatabase<typeof schema>) {
-    this.db = db;
+export const updateUserPassword = async (
+  id: number,
+  data: UserPasswordSchema
+) => {
+  const userToUpdate = await getUserById(id);
+  if (userToUpdate === undefined) return null;
+  const check = await compare(userToUpdate.password, data.password);
+  if (!check) {
+    return false;
   }
+  const newPassword = await hashPassword(data.password);
+  await db.update(user).set({ password: newPassword }).where(eq(user.id, id));
+};
 
-  /**
-   * GET ALL USERS
-   */
-  async getAllUser(): Promise<ApiResponse> {
-    try {
-      const users = await this.db.query.users.findMany();
-      return {
-        status: 200,
-        data: users,
-      };
-    } catch (error) {
-      return {
-        status: 500,
-        msg: error as Error,
-      };
-    }
-  }
+/* ------------------- PRIVATE METHOD -------------------  */
+const getUserById = async (id: number) => {
+  return await db.query.user.findFirst({ where: eq(user.id, id) });
+};
 
-  /**
-   * GET USER BY ID
-   */
-  async getUser(id: number): Promise<ApiResponse> {
-    try {
-      const user = await this.db.query.users.findFirst({
-        where: eq(users.id, id),
-      });
-      if (user === undefined) {
-        return {
-          status: 404,
-          msg: `User with id ${id} not found`,
-        };
-      }
-
-      return {
-        status: 200,
-        data: user,
-      };
-    } catch (error) {
-      return {
-        status: 500,
-        msg: error as Error,
-      };
-    }
-  }
-
-  /**
-   * CREATE USER
-   */
-  async createUser(data: NewUser): Promise<ApiResponse> {
-    try {
-      data.role = "user";
-      const user = await this.db.insert(users).values(data).returning();
-      return {
-        status: 200,
-        data: user,
-      };
-    } catch (error) {
-      return {
-        status: 500,
-        msg: error as Error,
-      };
-    }
-  }
-
-  /**
-   * UPDATE USER
-   */
-  async updateUser(id: number, data: NewUser): Promise<ApiResponse> {
-    try {
-      const user = await this.db.query.users.findFirst({
-        where: eq(users.id, id),
-      });
-      if (user === undefined) {
-        return {
-          status: 404,
-          msg: `User with id ${id} not found`,
-        };
-      }
-
-      const updateUser = await this.db
-        .update(users)
-        .set(data)
-        .where(eq(users.id, id));
-      return {
-        status: 200,
-        data: updateUser,
-      };
-    } catch (error) {
-      return {
-        status: 500,
-        msg: error as Error,
-      };
-    }
-  }
-
-  /**
-   * DELETE USER
-   */
-  async deleteUser(id: number): Promise<ApiResponse> {
-    try {
-      const user = await this.db.query.users.findFirst({
-        where: eq(users.id, id),
-      });
-      if (user === undefined) {
-        return {
-          msg: `User with id ${id} not found`,
-          status: 404,
-        };
-      }
-
-      await this.db.delete(users).where(eq(users.id, id));
-      return {
-        status: 404,
-        msg: `Delete user with id ${id} successfully`,
-      };
-    } catch (error) {
-      return {
-        msg: error as Error,
-        status: 500,
-      };
-    }
-  }
-}
+const hashPassword = async (password: string) => {
+  const salt = genSalt(10);
+  return await hash(password, 10);
+};

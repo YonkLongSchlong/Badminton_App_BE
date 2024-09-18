@@ -12,7 +12,7 @@ export const adminAuthorization = createMiddleware(async (c, next) => {
     });
   }
 
-  next();
+  await next();
 });
 
 export const userAuthorization = createMiddleware(async (c, next) => {
@@ -23,7 +23,7 @@ export const userAuthorization = createMiddleware(async (c, next) => {
     });
   }
 
-  next();
+  await next();
 });
 
 export const coachAuthorization = createMiddleware(async (c, next) => {
@@ -34,15 +34,19 @@ export const coachAuthorization = createMiddleware(async (c, next) => {
     });
   }
 
-  next();
+  await next();
 });
 
 const checkToken = async (c: Context<any, string, {}>): Promise<JWTPayload> => {
-  const token: string | undefined = c.req.header("token");
-  if (token === undefined) {
+  const authHeader: string | undefined = c.req.header("authorization");
+
+  if (authHeader === undefined) {
     throw new HTTPException(403, {
       message: "Missing authorization token",
     });
   }
+
+  const token = authHeader.substring(7, authHeader.length);
+
   return await verify(token as string, Bun.env.JWT_SECRET || "");
 };

@@ -1,6 +1,9 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/node-postgres";
+import * as schema from "./schema/index";
+import { Pool } from "pg";
 
-const connection = postgres(Bun.env.DATABASE_URL as string);
-export const db = drizzle(connection, { schema });
+const connection = new Pool({
+  connectionString: Bun.env.DATABASE_URL as string,
+});
+export const db = drizzle(connection, { schema, logger: true });
+export type DB = typeof db;
