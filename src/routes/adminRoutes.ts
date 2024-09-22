@@ -8,6 +8,7 @@ import {
 } from "../services/adminService";
 import { zValidator } from "@hono/zod-validator";
 import { adminCreateSchema } from "../db/schema/admin";
+import { ApiError, ApiResponse } from "../../types";
 
 export const adminRoutes = new Hono();
 
@@ -20,16 +21,13 @@ adminRoutes.post(
   async (c) => {
     try {
       const data = c.req.valid("json");
-      const adminId = await createAdmin(data);
-      return c.json({ msg: "Admin created successfully:", adminId });
+      const result = await createAdmin(data);
+
+      return c.json(new ApiResponse(200, "Admin created successfully", result));
     } catch (error) {
-      c.json(
-        {
-          msg: "Something went wrong, please try again",
-          error: error,
-        },
-        500
-      );
+      if (error instanceof Error) {
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
     }
   }
 );
@@ -43,13 +41,9 @@ adminRoutes.get("/users", adminAuthorization, async (c) => {
 
     return c.json(users);
   } catch (error) {
-    return c.json(
-      {
-        msg: "Something went wrong, please try again",
-        error: error,
-      },
-      500
-    );
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
   }
 });
 
@@ -59,19 +53,17 @@ adminRoutes.get("/users", adminAuthorization, async (c) => {
 adminRoutes.delete("/user/:id", adminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const userId = await deleteUser(id);
-    if (userId === null) {
-      c.status(404);
-      return c.text(`User with id ${id} not found`);
+    const result = await deleteUser(id);
+
+    if (result === null) {
+      return c.json(new ApiResponse(404, `User with id ${id} not found`), 404);
     }
 
-    return c.json({ msg: "User deleted successfully:", userId });
+    return c.json(new ApiResponse(200, `User deleted successfully`, result));
   } catch (error) {
-    c.status(500);
-    return c.json({
-      msg: "Something went wrong, please try again",
-      error: error,
-    });
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
   }
 });
 
@@ -83,13 +75,9 @@ adminRoutes.get("/coaches", adminAuthorization, async (c) => {
     const coaches = await getAllCoaches();
     return c.json(coaches);
   } catch (error) {
-    return c.json(
-      {
-        msg: "Something went wrong, please try again",
-        error: error,
-      },
-      500
-    );
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
   }
 });
 
@@ -99,19 +87,16 @@ adminRoutes.get("/coaches", adminAuthorization, async (c) => {
 adminRoutes.delete("/coach/:id", adminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const coachId = await deleteUser(id);
-    if (coachId === null) {
-      return c.text(`Coach with id ${id} not found`, 404);
+    const result = await deleteUser(id);
+
+    if (result === null) {
+      return c.json(new ApiResponse(404, `Coach with id ${id} not found`), 404);
     }
 
-    return c.json({ msg: "Coach deleted successfully:", coachId });
+    return c.json(new ApiResponse(200, `Coach deleted successfully`, result));
   } catch (error) {
-    return c.json(
-      {
-        msg: "Something went wrong, please try again",
-        error: error,
-      },
-      500
-    );
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
   }
 });

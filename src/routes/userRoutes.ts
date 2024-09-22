@@ -12,6 +12,10 @@ import {
   userUpdateSchema,
 } from "../db/schema/user";
 import { HTTPException } from "hono/http-exception";
+import { DatabaseError } from "pg";
+import { ApiError, ApiResponse } from "../../types";
+import { DrizzleError } from "drizzle-orm";
+import { userAuthorization } from "../middlewares/authMiddlewares";
 
 export const userRoutes = new Hono();
 
@@ -24,15 +28,19 @@ userRoutes.post(
   async (c) => {
     try {
       const data = c.req.valid("json");
-      const userId = await createUser(data);
+      const result = await createUser(data);
+      if (result === false) {
+        return c.json(
+          new ApiResponse(400, "User with this email already exist"),
+          400
+        );
+      }
 
-      return c.json({ msg: "User created successfully:", userId });
+      return c.json(new ApiResponse(200, "User created successfully", result));
     } catch (error) {
-      c.status(500);
-      return c.json({
-        msg: "Something went wrong, please try again",
-        error: error,
-      });
+      if (error instanceof Error) {
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
     }
   }
 );
@@ -40,76 +48,85 @@ userRoutes.post(
 /**
  * GET: /users/:id
  */
-userRoutes.get("/:id", async (c) => {
+userRoutes.get("/:id", userAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const user = await getUser(id);
     if (user === null) {
-      return c.text(`User with id ${id} not found`, 404);
+      return c.json(new ApiResponse(404, `User with id ${id} not found`), 404);
     }
 
     return c.json(user);
   } catch (error) {
-    return c.json(
-      {
-        msg: "Something went wrong, please try again",
-        error: error,
-      },
-      500
-    );
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
   }
 });
 
 /**
  * PATCH: /users/:id
  */
-userRoutes.patch("/:id", zValidator("json", userUpdateSchema), async (c) => {
-  try {
-    const id = Number.parseInt(c.req.param("id"));
-    const data = c.req.valid("json");
-    const user = await updateUser(id, data);
-    if (user === null) {
-      return c.text(`User with id ${id} not found`, 404);
-    }
+userRoutes.patch(
+  "/:id",
+  userAuthorization,
+  zValidator("json", userUpdateSchema),
+  async (c) => {
+    try {
+      const id = Number.parseInt(c.req.param("id"));
+      const data = c.req.valid("json");
+      const result = await updateUser(id, data);
 
-    return c.json(user);
-  } catch (error) {
-    return c.json(
-      {
-        msg: "Something went wrong, please try again",
-        error: error,
-      },
-      500
-    );
+      if (result === null) {
+        return c.json(
+          new ApiResponse(404, `User with id ${id} not found`),
+          404
+        );
+      }
+
+      if (result === false) {
+        return c.json(
+          new ApiResponse(400, "User with this email already exist"),
+          400
+        );
+      }
+
+      return c.json(new ApiResponse(200, "User updated successfully", result));
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
+    }
   }
-});
+);
 
 /**
  * PATCH: /users/:id/password
  */
 userRoutes.patch(
   "/:id/password",
+  userAuthorization,
   zValidator("json", userPasswordSchema),
   async (c) => {
     try {
       const id = Number.parseInt(c.req.param("id"));
       const data = c.req.valid("json");
-      const user = await updateUserPassword(id, data);
-      if (user === null) {
-        return c.text(`User with id ${id} not found`, 404);
-      } else if (user === false) {
-        return c.text("Incorrect password", 400);
+      const result = await updateUserPassword(id, data);
+
+      if (result === null) {
+        return c.json(
+          new ApiResponse(404, `User with id ${id} not found`),
+          404
+        );
+      } else if (result === false) {
+        return c.json(new ApiResponse(400, `Incorrect password`), 400);
       }
 
-      return c.text("Password updated successfully");
+      return c.json(new ApiResponse(200, "Password updated successfully"));
     } catch (error) {
-      return c.json(
-        {
-          msg: "Something went wrong, please try again",
-          error: error,
-        },
-        500
-      );
+      if (error instanceof Error) {
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
     }
   }
 );

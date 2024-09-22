@@ -16,6 +16,7 @@ export const getAllUsers = async () => {
 export const deleteUser = async (id: number) => {
   const userToDelete = await getUserById(id);
   if (userToDelete === undefined) return null;
+
   const [result] = await db
     .delete(user)
     .where(eq(user.id, id))
@@ -30,6 +31,7 @@ export const getAllCoaches = async () => {
 export const deleteCoach = async (id: number) => {
   const coachToDelete = await getCoachById(id);
   if (coachToDelete === undefined) return null;
+
   const [result] = await db
     .delete(coach)
     .where(eq(coach.id, id))
