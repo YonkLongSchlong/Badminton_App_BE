@@ -2,8 +2,11 @@ import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { admin, coach, user } from "../db/schema";
 import type { AdminCreateSchema } from "../db/schema/admin";
+import { hashPassword } from "../../utils/authenticateUtils";
 
 export const createAdmin = async (data: AdminCreateSchema) => {
+  data.password = await hashPassword(data.password);
+
   const [result] = await db.insert(admin).values(data).returning();
   return result.id;
 };

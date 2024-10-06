@@ -1,9 +1,10 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db";
-import type { LoginSchema } from "../routes/authRoutes";
+import { db, redisClient } from "../db";
+import type { LoginSchema, OtpSchema } from "../routes/authRoutes";
 import { admin, coach, user } from "../db/schema";
 import { compare } from "bcrypt";
 import { sign } from "hono/jwt";
+import { generateOtp } from "../../utils/authenticateUtils";
 
 export const authenticateLogin = async (data: LoginSchema) => {
   switch (data.role) {
@@ -12,22 +13,42 @@ export const authenticateLogin = async (data: LoginSchema) => {
       if (user === undefined) {
         return null;
       }
-      return authenticatePassword(user, data);
+      return await authenticatePassword(user, data);
 
     case "coach":
       const coach = await getCoachByEmail(data.email);
       if (coach === undefined) {
         return null;
       }
-      return authenticatePassword(coach, data);
+      return await authenticatePassword(coach, data);
 
     default:
       const admin = await getAdminByEmail(data.email);
       if (admin === undefined) {
         return null;
       }
-      return authenticatePassword(admin, data);
+      return await authenticatePassword(admin, data);
   }
+};
+
+export const authenticateOtp = async (data: OtpSchema) => {
+  const otp = await redisClient.get(data.email);
+  if (otp === null || otp !== data.otp) {
+    return false;
+  }
+
+  const payload = {
+    email: data.email,
+    role: data.role,
+    exp: Math.floor(Date.now() / 1000) + 60 * 60,
+  };
+
+  const values = Promise.all([
+    sign(payload, Bun.env.JWT_SECRET || ""),
+    redisClient.del(data.email),
+  ]);
+
+  return values;
 };
 
 /* ------------------- PRIVATE METHOD -------------------  */
@@ -50,16 +71,11 @@ const getAdminByEmail = async (email: string) => {
 };
 
 const authenticatePassword = async (account: any, data: LoginSchema) => {
-  const check = compare(data.password, account.password);
+  const check = await compare(data.password, account.password);
   if (!check) {
     return false;
   }
-
-  const payload = {
-    email: data.email,
-    role: data.role,
-    exp: Math.floor(Date.now() / 1000) + 60 * 60,
-  };
-
-  return await sign(payload, Bun.env.JWT_SECRET || "");
+  const otp = generateOtp();
+  await redisClient.set(data.email, otp.otp, { EX: 60 * 5 });
+  return otp;
 };

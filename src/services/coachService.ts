@@ -7,11 +7,13 @@ import type {
   CoachPasswordSchema,
   CoachUpdateSchema,
 } from "../db/schema/coach";
+import { hashPassword } from "../../utils/authenticateUtils";
 
 export const createCoach = async (data: CoachCreateSchema) => {
   const checkCoachEmail = await getCoachByEmail(data.email);
 
   if (checkCoachEmail !== undefined) return false;
+  data.password = await hashPassword(data.password);
 
   const [result] = await db.insert(coach).values(data).returning();
   return result.id;
@@ -28,8 +30,9 @@ export const updateCoach = async (id: number, data: CoachUpdateSchema) => {
   const coachToUpdate = await getCoachById(id);
   if (coachToUpdate === undefined) return null;
 
-  const checkCoachEmail = getCoachByEmail(data.email);
-  if (checkCoachEmail !== undefined) return false;
+  const checkCoachEmail = await getCoachByEmail(data.email);
+  if (checkCoachEmail !== undefined && checkCoachEmail.id !== coachToUpdate.id)
+    return false;
 
   const [result] = await db
     .update(coach)
@@ -62,9 +65,4 @@ const getCoachById = async (id: number) => {
 
 const getCoachByEmail = async (email: string) => {
   return await db.query.coach.findFirst({ where: eq(coach.email, email) });
-};
-
-const hashPassword = async (password: string) => {
-  const salt = genSalt(10);
-  return await hash(password, 10);
 };

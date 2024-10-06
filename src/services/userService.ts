@@ -7,10 +7,13 @@ import {
 } from "../db/schema/user";
 import { eq } from "drizzle-orm";
 import { compare, genSalt, hash } from "bcrypt";
+import { hashPassword } from "../../utils/authenticateUtils";
 
 export const createUser = async (data: UserCreateSchema) => {
-  const checkUserEmail = getUserByEmail(data.email);
+  const checkUserEmail = await getUserByEmail(data.email);
+
   if (checkUserEmail !== undefined) return false;
+  data.password = await hashPassword(data.password);
 
   const [result] = await db.insert(user).values(data).returning();
   return result.id;
@@ -27,8 +30,9 @@ export const updateUser = async (id: number, data: UserUpdateSchema) => {
   const userToUpdate = await getUserById(id);
   if (userToUpdate === undefined) return null;
 
-  const checkUserEmail = getUserByEmail(data.email);
-  if (checkUserEmail !== undefined) return false;
+  const checkUserEmail = await getUserByEmail(data.email);
+  if (checkUserEmail !== undefined && checkUserEmail.id !== userToUpdate.id)
+    return false;
 
   const [result] = await db
     .update(user)
@@ -61,9 +65,4 @@ const getUserById = async (id: number) => {
 
 const getUserByEmail = async (email: string) => {
   return await db.query.user.findFirst({ where: eq(user.email, email) });
-};
-
-const hashPassword = async (password: string) => {
-  const salt = genSalt(10);
-  return await hash(password, 10);
 };
