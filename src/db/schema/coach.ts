@@ -3,7 +3,7 @@ import { persons } from "./person";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
-import { course } from "./course";
+import { paidCourse } from "./paid_course";
 
 export const coach = pgTable("coach", {
   ...persons,
@@ -11,7 +11,7 @@ export const coach = pgTable("coach", {
 });
 
 export const coachRelations = relations(coach, ({ many }) => ({
-  course: many(course),
+  paidCourse: many(paidCourse),
 }));
 
 export const coachCreateSchema = createInsertSchema(coach, {

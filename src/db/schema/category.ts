@@ -3,7 +3,8 @@ import { baseEntity } from "./base";
 import { pgTable, varchar } from "drizzle-orm/pg-core";
 import type { z } from "zod";
 import { relations } from "drizzle-orm";
-import { course } from "./course";
+import { freeCourse } from "./free_course";
+import { paidCourse } from "./paid_course";
 
 export const category = pgTable("category", {
   ...baseEntity,
@@ -11,7 +12,8 @@ export const category = pgTable("category", {
 });
 
 export const categoryRelations = relations(category, ({ many }) => ({
-  course: many(course),
+  freeCourse: many(freeCourse),
+  paidCourse: many(paidCourse),
 }));
 
 export const categorySchema = createInsertSchema(category);

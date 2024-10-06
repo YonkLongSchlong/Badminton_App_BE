@@ -6,6 +6,7 @@ import { hashPassword } from "../../utils/authenticateUtils";
 
 export const createAdmin = async (data: AdminCreateSchema) => {
   data.password = await hashPassword(data.password);
+  data.role = "admin";
 
   const [result] = await db.insert(admin).values(data).returning();
   return result.id;

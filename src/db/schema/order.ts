@@ -1,16 +1,16 @@
 import { decimal, integer, pgTable } from "drizzle-orm/pg-core";
 import { baseEntity } from "./base";
-import { course } from "./course";
 import { user } from "./user";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import type { z } from "zod";
+import { paidCourse } from "./paid_course";
 
 export const order = pgTable("order", {
   ...baseEntity,
   total: decimal("total").notNull(),
-  course_id: integer("course_id")
-    .references(() => course.id)
+  paid_course_id: integer("paid_course_id")
+    .references(() => paidCourse.id)
     .notNull(),
   user_id: integer("user_id")
     .references(() => user.id)
@@ -22,9 +22,9 @@ export const orderRelations = relations(order, ({ one }) => ({
     fields: [order.user_id],
     references: [user.id],
   }),
-  course: one(course, {
-    fields: [order.course_id],
-    references: [course.id],
+  paidCourse: one(paidCourse, {
+    fields: [order.paid_course_id],
+    references: [paidCourse.id],
   }),
 }));
 

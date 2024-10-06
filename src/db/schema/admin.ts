@@ -2,6 +2,8 @@ import { pgTable } from "drizzle-orm/pg-core";
 import { persons } from "./person";
 import { createInsertSchema } from "drizzle-zod";
 import type { z } from "zod";
+import { relations } from "drizzle-orm";
+import { freeCourse } from "./free_course";
 
 export const admin = pgTable("admin", {
   ...persons,

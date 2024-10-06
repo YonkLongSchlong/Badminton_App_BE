@@ -9,6 +9,7 @@ import {
 import { zValidator } from "@hono/zod-validator";
 import { adminCreateSchema } from "../db/schema/admin";
 import { ApiError, ApiResponse } from "../../types";
+import { freeCourseCreateSchema } from "../db/schema/free_course";
 
 export const adminRoutes = new Hono();
 
