@@ -24,7 +24,6 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
   try {
     const data = c.req.valid("json");
     const result = await authenticateLogin(data);
-
     if (result === null || result === false) {
       c.status(400);
       return c.text("Invalid credentials");
