@@ -1,4 +1,4 @@
-import { db } from "../db";
+import { db} from "../db";
 import {
   user,
   type UserCreateSchema,
@@ -8,6 +8,7 @@ import {
 import { eq } from "drizzle-orm";
 import { compare, genSalt, hash } from "bcrypt";
 import { hashPassword } from "../../utils/authenticateUtils";
+import { sendOtpToUser } from "./authService";
 
 export const createUser = async (data: UserCreateSchema) => {
   const checkUserEmail = await getUserByEmail(data.email);
@@ -50,19 +51,26 @@ export const updateUserPassword = async (
 ) => {
   const userToUpdate = await getUserById(id);
   if (userToUpdate === undefined) return null;
-  const check = await compare(userToUpdate.password, data.password);
+  const check = await compare(data.oldPassword, userToUpdate.password);
   if (!check) {
     return false;
   }
-  const newPassword = await hashPassword(data.password);
+  const newPassword = await hashPassword(data.newPassword);
   await db.update(user).set({ password: newPassword }).where(eq(user.id, id));
+};
+
+export const authenticateUserRegister = async (data: UserCreateSchema) => {
+  const checkUserEmail = await getUserByEmail(data.email);
+
+  if (checkUserEmail !== undefined) return false;
+  return sendOtpToUser(data.email);
+};
+
+export const getUserByEmail = async (email: string) => {
+  return await db.query.user.findFirst({ where: eq(user.email, email) });
 };
 
 /* ------------------- PRIVATE METHOD -------------------  */
 const getUserById = async (id: number) => {
   return await db.query.user.findFirst({ where: eq(user.id, id) });
-};
-
-const getUserByEmail = async (email: string) => {
-  return await db.query.user.findFirst({ where: eq(user.email, email) });
 };

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import {
+  authenticateUserRegister,
   createUser,
   getUser,
   updateUser,
@@ -28,7 +29,7 @@ userRoutes.post(
   async (c) => {
     try {
       const data = c.req.valid("json");
-      const result = await createUser(data);
+      const result = await authenticateUserRegister(data);
       if (result === false) {
         return c.json(
           new ApiResponse(400, "User with this email already exist"),
@@ -36,7 +37,7 @@ userRoutes.post(
         );
       }
 
-      return c.json(new ApiResponse(200, "User created successfully", result));
+      return c.json(new ApiResponse(200, "OTP sent to email successfully", result));
     } catch (error) {
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);

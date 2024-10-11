@@ -1,4 +1,4 @@
-import { db } from "../db";
+import { db, redisClient } from "../db";
 import { eq } from "drizzle-orm";
 import { compare, genSalt, hash } from "bcrypt";
 import { coach } from "../db/schema";
@@ -8,6 +8,9 @@ import type {
   CoachUpdateSchema,
 } from "../db/schema/coach";
 import { hashPassword } from "../../utils/authenticateUtils";
+import { generateOtp } from "../../utils/authenticateUtils";
+import { sendOtpToUser } from "./authService";
+
 
 export const createCoach = async (data: CoachCreateSchema) => {
   const checkCoachEmail = await getCoachByEmail(data.email);
@@ -58,11 +61,20 @@ export const updateCoachPassword = async (
   await db.update(coach).set({ password: newPassword }).where(eq(coach.id, id));
 };
 
+export const authenticateCoachRegister = async (data: CoachCreateSchema) => {
+  const checkCoachEmail = await getCoachByEmail(data.email);
+
+  if (checkCoachEmail !== undefined) return false;
+  return sendOtpToUser(data.email);
+};
+
+export const getCoachByEmail = async (email: string) => {
+  return await db.query.coach.findFirst({ where: eq(coach.email, email) });
+};
+
 /* ------------------- PRIVATE METHOD -------------------  */
 const getCoachById = async (id: number) => {
   return await db.query.coach.findFirst({ where: eq(coach.id, id) });
 };
 
-const getCoachByEmail = async (email: string) => {
-  return await db.query.coach.findFirst({ where: eq(coach.email, email) });
-};
+

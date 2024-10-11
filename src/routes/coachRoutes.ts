@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import {
-  createCoach,
   getCoach,
   updateCoach,
   updateCoachPassword,
+  authenticateCoachRegister
 } from "../services/coachService";
 import {
   coachCreateSchema,
@@ -25,15 +25,15 @@ coachRoutes.post(
   async (c) => {
     try {
       const data = c.req.valid("json");
-      const result = await createCoach(data);
+      const result = await authenticateCoachRegister(data);
       if (result === false) {
         return c.json(
-          new ApiResponse(400, "Coach with this email already exist"),
+          new ApiResponse(400, "User with this email already exist"),
           400
         );
       }
 
-      return c.json(new ApiResponse(200, "Coach created successfully", result));
+      return c.json(new ApiResponse(200, "OTP sent to email successfully", result));
     } catch (error) {
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);

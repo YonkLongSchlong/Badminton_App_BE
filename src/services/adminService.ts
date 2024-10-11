@@ -1,13 +1,16 @@
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { db, redisClient } from "../db";
 import { admin, coach, user } from "../db/schema";
 import type { AdminCreateSchema } from "../db/schema/admin";
 import { hashPassword } from "../../utils/authenticateUtils";
+import { generateOtp } from "../../utils/authenticateUtils";
+import { sendOtpToUser } from "./authService";
 
 export const createAdmin = async (data: AdminCreateSchema) => {
-  data.password = await hashPassword(data.password);
-  data.role = "admin";
+  const checkAdminEmail = await getAdminByEmail(data.email);
+  if (checkAdminEmail !== undefined) return false;
 
+  data.password = await hashPassword(data.password);
   const [result] = await db.insert(admin).values(data).returning();
   return result.id;
 };
@@ -41,6 +44,17 @@ export const deleteCoach = async (id: number) => {
     .where(eq(coach.id, id))
     .returning({ coachId: coach.id });
   return result.coachId;
+};
+
+export const authenticateAdminRegister = async (data: AdminCreateSchema) => {
+  const checkUserEmail = await getAdminByEmail(data.email);
+
+  if (checkUserEmail !== undefined) return false;
+  return sendOtpToUser(data.email);
+};
+
+export const getAdminByEmail = async (email: string) => {
+  return await db.query.admin.findFirst({ where: eq(user.email, email) });
 };
 
 /* ------------------- PRIVATE METHOD -------------------  */
