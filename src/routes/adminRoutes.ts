@@ -5,6 +5,7 @@ import {
   deleteUser,
   getAllCoaches,
   getAllUsers,
+  authenticateAdminRegister
 } from "../services/adminService";
 import { zValidator } from "@hono/zod-validator";
 import { adminCreateSchema } from "../db/schema/admin";
@@ -22,9 +23,15 @@ adminRoutes.post(
   async (c) => {
     try {
       const data = c.req.valid("json");
-      const result = await createAdmin(data);
+      const result = await authenticateAdminRegister(data);
+      if (result === false) {
+        return c.json(
+          new ApiResponse(400, "User with this email already exist"),
+          400
+        );
+      }
 
-      return c.json(new ApiResponse(200, "Admin created successfully", result));
+      return c.json(new ApiResponse(200, "OTP sent successfully", result));
     } catch (error) {
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
