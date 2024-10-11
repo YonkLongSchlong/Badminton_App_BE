@@ -4,6 +4,7 @@ import { admin, coach, user } from "../db/schema";
 import type { AdminCreateSchema } from "../db/schema/admin";
 import { hashPassword } from "../../utils/authenticateUtils";
 import { generateOtp } from "../../utils/authenticateUtils";
+import { sendOtpToUser } from "./authService";
 
 export const createAdmin = async (data: AdminCreateSchema) => {
   const checkAdminEmail = await getAdminByEmail(data.email);
@@ -49,9 +50,7 @@ export const authenticateAdminRegister = async (data: AdminCreateSchema) => {
   const checkUserEmail = await getAdminByEmail(data.email);
 
   if (checkUserEmail !== undefined) return false;
-  const otp = generateOtp();
-  await redisClient.set(data.email, otp.otp, { EX: 60 * 5 });
-  return otp;
+  return sendOtpToUser(data.email);
 };
 
 export const getAdminByEmail = async (email: string) => {

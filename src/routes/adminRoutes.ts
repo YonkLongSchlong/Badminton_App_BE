@@ -31,7 +31,7 @@ adminRoutes.post(
         );
       }
 
-      return c.json(new ApiResponse(200, "OTP sent successfully", result));
+      return c.json(new ApiResponse(200, "OTP sent to email successfully", result));
     } catch (error) {
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);

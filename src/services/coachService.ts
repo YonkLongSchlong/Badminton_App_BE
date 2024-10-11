@@ -9,6 +9,7 @@ import type {
 } from "../db/schema/coach";
 import { hashPassword } from "../../utils/authenticateUtils";
 import { generateOtp } from "../../utils/authenticateUtils";
+import { sendOtpToUser } from "./authService";
 
 
 export const createCoach = async (data: CoachCreateSchema) => {
@@ -64,9 +65,7 @@ export const authenticateCoachRegister = async (data: CoachCreateSchema) => {
   const checkCoachEmail = await getCoachByEmail(data.email);
 
   if (checkCoachEmail !== undefined) return false;
-  const otp = generateOtp();
-  await redisClient.set(data.email, otp.otp, { EX: 60 * 5 });
-  return otp;
+  return sendOtpToUser(data.email);
 };
 
 export const getCoachByEmail = async (email: string) => {
