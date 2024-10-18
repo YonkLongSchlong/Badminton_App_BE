@@ -16,6 +16,7 @@ import { type UserCreateSchema } from "../db/schema/user";
 import { type AdminCreateSchema } from "../db/schema/admin";
 import { type CoachCreateSchema } from "../db/schema/coach";
 import { ApiResponse, ApiError } from "../../types";
+import { allRoleAuthorization } from "../middlewares/authMiddlewares";
 
 const loginSchema = z.object({
   role: z.string(),
@@ -134,14 +135,14 @@ authRoute.post(
       }
 
       if (!user) {
-        return c.json(new ApiResponse(404, "User not found"));
+        return c.json(new ApiResponse(404, "User not found"),404);
       }
 
       const result = await sendOtpToUser(data.email);
-      return c.json(new ApiResponse(200, "OTP sent to email successfully", result));
+      return c.json(new ApiResponse(200, "OTP sent to email successfully", result),200);
     } catch (error) {
       if (error instanceof Error) {
-        return c.json(new ApiError(500, error.name, error.message));
+        return c.json(new ApiError(500, error.name, error.message),500);
       }
     }
   }
@@ -170,7 +171,7 @@ authRoute.post(
         return c.json(new ApiResponse(404, `User not found`), 404);
       }
 
-      return c.json(new ApiResponse(200, "Password reset successfully"));
+      return c.json(new ApiResponse(200, "Password reset successfully",));
     } catch (error) {
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
@@ -178,3 +179,12 @@ authRoute.post(
     }
   }
 );
+
+authRoute.post('/logout', async (c) => {
+  try {
+    return c.json(new ApiResponse(200, 'Logout successful'));
+  } catch (error) {
+    console.error(error);
+    return c.json(new ApiResponse(500, 'Something went wrong'), 500);
+  }
+});

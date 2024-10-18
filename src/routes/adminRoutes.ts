@@ -5,7 +5,8 @@ import {
   deleteUser,
   getAllCoaches,
   getAllUsers,
-  authenticateAdminRegister
+  authenticateAdminRegister,
+  deleteCoach
 } from "../services/adminService";
 import { zValidator } from "@hono/zod-validator";
 import { adminCreateSchema } from "../db/schema/admin";
@@ -95,7 +96,7 @@ adminRoutes.get("/coaches", adminAuthorization, async (c) => {
 adminRoutes.delete("/coach/:id", adminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const result = await deleteUser(id);
+    const result = await deleteCoach(id);
 
     if (result === null) {
       return c.json(new ApiResponse(404, `Coach with id ${id} not found`), 404);
