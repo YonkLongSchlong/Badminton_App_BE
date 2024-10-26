@@ -8,9 +8,9 @@ import { z } from "zod";
 
 export const user = pgTable("user", {
   ...persons,
-  started_courses: integer("started_course"),
-  ongoing_courses: integer("ongoing_course"),
-  finished_course: integer("finished_course"),
+  startedCourses: integer("started_course"),
+  ongoingCourses: integer("ongoing_course"),
+  finishedCourse: integer("finished_course"),
 });
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -22,9 +22,11 @@ export const userCreateSchema = createInsertSchema(user, {
   id: (schema) => schema.id.optional(),
   role: (schema) => schema.role.optional(),
   avatar: (schema) => schema.avatar.optional(),
-  started_courses: (schema) => schema.started_courses.optional(),
-  ongoing_courses: (schema) => schema.ongoing_courses.optional(),
-  finished_course: (schema) => schema.finished_course.optional(),
+  dob: (schema) => schema.dob.optional(),
+  gender: (schema) => schema.gender.optional(),
+  startedCourses: (schema) => schema.startedCourses.optional(),
+  ongoingCourses: (schema) => schema.ongoingCourses.optional(),
+  finishedCourse: (schema) => schema.finishedCourse.optional(),
 });
 
 export const userUpdateSchema = createInsertSchema(user, {
@@ -32,14 +34,15 @@ export const userUpdateSchema = createInsertSchema(user, {
   password: (schema) => schema.password.optional(),
   role: (schema) => schema.role.optional(),
   avatar: (schema) => schema.avatar.optional(),
-  started_courses: (schema) => schema.started_courses.optional(),
-  ongoing_courses: (schema) => schema.ongoing_courses.optional(),
-  finished_course: (schema) => schema.finished_course.optional(),
+  startedCourses: (schema) => schema.startedCourses.optional(),
+  ongoingCourses: (schema) => schema.ongoingCourses.optional(),
+  finishedCourse: (schema) => schema.finishedCourse.optional(),
 });
 
 export const userPasswordSchema = z.object({
-  oldPassword: z.string(),
+  password: z.string(),
   newPassword: z.string(),
+  confirmPassword: z.string(),
 });
 
 export type UserCreateSchema = z.infer<typeof userCreateSchema>;

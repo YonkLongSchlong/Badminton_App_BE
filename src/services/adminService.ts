@@ -1,18 +1,17 @@
 import { eq } from "drizzle-orm";
-import { db, redisClient } from "../db";
+import { db } from "../db";
 import { admin, coach, user } from "../db/schema";
 import type { AdminCreateSchema } from "../db/schema/admin";
 import { hashPassword } from "../../utils/authenticateUtils";
-import { generateOtp } from "../../utils/authenticateUtils";
-import { sendOtpToUser } from "./authService";
+import { BadRequestError, NotFoundError } from "../../types";
 
 export const createAdmin = async (data: AdminCreateSchema) => {
   const checkAdminEmail = await getAdminByEmail(data.email);
-  if (checkAdminEmail !== undefined) return false;
+  if (checkAdminEmail !== undefined)
+    throw new BadRequestError("Admin with this email have already exist");
 
   data.password = await hashPassword(data.password);
-  const [result] = await db.insert(admin).values(data).returning();
-  return result.id;
+  await db.insert(admin).values(data).returning();
 };
 
 export const getAllUsers = async () => {
@@ -22,13 +21,10 @@ export const getAllUsers = async () => {
 
 export const deleteUser = async (id: number) => {
   const userToDelete = await getUserById(id);
-  if (userToDelete === undefined) return null;
+  if (userToDelete === undefined)
+    throw new NotFoundError(`User with id ${id} not found`);
 
-  const [result] = await db
-    .delete(user)
-    .where(eq(user.id, id))
-    .returning({ userId: user.id });
-  return result.userId;
+  await db.delete(user).where(eq(user.id, id));
 };
 
 export const getAllCoaches = async () => {
@@ -37,24 +33,14 @@ export const getAllCoaches = async () => {
 
 export const deleteCoach = async (id: number) => {
   const coachToDelete = await getCoachById(id);
-  if (coachToDelete === undefined) return null;
+  if (coachToDelete === undefined)
+    throw new NotFoundError(`Coach with id ${id} not found`);
 
-  const [result] = await db
-    .delete(coach)
-    .where(eq(coach.id, id))
-    .returning({ coachId: coach.id });
-  return result.coachId;
-};
-
-export const authenticateAdminRegister = async (data: AdminCreateSchema) => {
-  const checkUserEmail = await getAdminByEmail(data.email);
-
-  if (checkUserEmail !== undefined) return false;
-  return sendOtpToUser(data.email);
+  await db.delete(coach).where(eq(coach.id, id));
 };
 
 export const getAdminByEmail = async (email: string) => {
-  return await db.query.admin.findFirst({ where: eq(user.email, email) });
+  return await db.query.admin.findFirst({ where: eq(admin.email, email) });
 };
 
 /* ------------------- PRIVATE METHOD -------------------  */

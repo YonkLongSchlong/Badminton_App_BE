@@ -1,4 +1,4 @@
-import { db} from "../db";
+import { db } from "../db";
 import {
   user,
   type UserCreateSchema,
@@ -6,34 +6,37 @@ import {
   type UserUpdateSchema,
 } from "../db/schema/user";
 import { eq } from "drizzle-orm";
-import { compare, genSalt, hash } from "bcrypt";
+import { compare } from "bcrypt";
 import { hashPassword } from "../../utils/authenticateUtils";
-import { sendOtpToUser } from "./authService";
+import { BadRequestError, NotFoundError } from "../../types";
 
 export const createUser = async (data: UserCreateSchema) => {
   const checkUserEmail = await getUserByEmail(data.email);
 
-  if (checkUserEmail !== undefined) return false;
+  if (checkUserEmail !== undefined) {
+    throw new BadRequestError("User with this email have already exist");
+  }
   data.password = await hashPassword(data.password);
 
-  const [result] = await db.insert(user).values(data).returning();
-  return result.id;
+  await db.insert(user).values(data).returning();
 };
 
 export const getUser = async (id: number) => {
   const user = await getUserById(id);
-  if (user === undefined) return null;
+  if (user === undefined)
+    throw new NotFoundError(`User with id ${id} not found`);
   user.password = "";
   return user;
 };
 
 export const updateUser = async (id: number, data: UserUpdateSchema) => {
   const userToUpdate = await getUserById(id);
-  if (userToUpdate === undefined) return null;
+  if (userToUpdate === undefined)
+    throw new NotFoundError(`User with id ${id} not found`);
 
   const checkUserEmail = await getUserByEmail(data.email);
   if (checkUserEmail !== undefined && checkUserEmail.id !== userToUpdate.id)
-    return false;
+    throw new BadRequestError(`Email ${data.email} have already registered`);
 
   const [result] = await db
     .update(user)
@@ -41,7 +44,6 @@ export const updateUser = async (id: number, data: UserUpdateSchema) => {
     .where(eq(user.id, id))
     .returning();
   result.password = "";
-
   return result;
 };
 
@@ -50,20 +52,14 @@ export const updateUserPassword = async (
   data: UserPasswordSchema
 ) => {
   const userToUpdate = await getUserById(id);
-  if (userToUpdate === undefined) return null;
-  const check = await compare(data.oldPassword, userToUpdate.password);
-  if (!check) {
-    return false;
-  }
+  if (userToUpdate === undefined)
+    throw new NotFoundError(`User with id ${id} not found`);
+
+  const check = await compare(data.password, userToUpdate.password);
+  if (!check) throw new BadRequestError(`Password not match, please try again`);
+
   const newPassword = await hashPassword(data.newPassword);
   await db.update(user).set({ password: newPassword }).where(eq(user.id, id));
-};
-
-export const authenticateUserRegister = async (data: UserCreateSchema) => {
-  const checkUserEmail = await getUserByEmail(data.email);
-
-  if (checkUserEmail !== undefined) return false;
-  return sendOtpToUser(data.email);
 };
 
 export const getUserByEmail = async (email: string) => {

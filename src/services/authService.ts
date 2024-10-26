@@ -1,5 +1,11 @@
 import { db, redisClient } from "../db";
-import type { LoginSchema, OtpSchema } from "../routes/authRoutes";
+import type {
+  ForgotPasswordSchema,
+  LoginSchema,
+  OtpSchema,
+  RegisterSchema,
+  ResetPasswordSchema,
+} from "../routes/authRoutes";
 import { compare } from "bcrypt";
 import { sign } from "hono/jwt";
 import { generateOtp, hashPassword } from "../../utils/authenticateUtils";
@@ -9,69 +15,123 @@ import { getCoachByEmail } from "./coachService";
 import { getAdminByEmail } from "./adminService";
 import { admin, coach, user } from "../db/schema";
 import { eq } from "drizzle-orm";
+import { BadRequestError } from "../../types";
 
+/** AUTHENTICATE LOGIN
+ * This function will authenticate password base on role
+ * If success will generate an otp and send it through email
+ */
+export const authenticateLogin = async (data: LoginSchema) => {
+  let result = null;
 
-export const authenticateOtp = async (email: string, otp: string) => {
-  const otpStored = await redisClient.get(email);
-  if (otpStored === null || otpStored !== otp) {
-    return false;
+  switch (data.role) {
+    case "user":
+      result = await getUserByEmail(data.email);
+      break;
+    case "coach":
+      result = await getCoachByEmail(data.email);
+      break;
+    default:
+      result = await getAdminByEmail(data.email);
   }
-  return redisClient.del(email);
+
+  if (result == undefined) {
+    throw new BadRequestError("User with this email not found");
+  }
+
+  const check = await compare(data.password, result.password);
+  if (!check) {
+    throw new BadRequestError("Invalid credential");
+  }
+
+  sendOtp(data.email);
 };
 
-export const generateToken = async (data: LoginSchema) =>{
+/** AUTHENTICATE LOGIN OTP
+ * This function will authenticate otp
+ * if success will generate a jwt token and return it
+ */
+export const authenticateLoginOtp = async (data: OtpSchema) => {
+  const otp = await redisClient.get(data.email);
+
+  if (otp === null || otp !== data.otp) {
+    throw new BadRequestError("Invalid OTP code");
+  }
+
   const payload = {
     email: data.email,
     role: data.role,
     exp: Math.floor(Date.now() / 1000) + 60 * 60,
   };
-  const token = await sign(payload, Bun.env.JWT_SECRET || "");
+
+  const token = Promise.all([
+    sign(payload, Bun.env.JWT_SECRET || ""),
+    redisClient.del(data.email),
+  ]);
+
   return token;
-}
-
-export const authenticatePassword = async (account: any, data: LoginSchema) => {
-  const check = await compare(data.password, account.password);
-  if (!check) {
-    return false;
-  }
 };
 
-export const sendOtpToUser = async (email: string) => {
-  const otp = generateOtp();
-  await redisClient.set(email, otp.otp, { EX: 60 * 5 });
-  await sendOtpEmail(email, otp.otp);
-  return otp;
-};
+/** FORGOT PASSWORD
+ * This function will check if email existed
+ * If success will generate a jwt token and return it
+ */
+export const forgotPassword = async (data: ForgotPasswordSchema) => {
+  let result = null;
 
-export const updateUserPasswordByEmail = async (email: string, password: string, role: string) => {
-  let person = null;
-  let targetTable = null;
-  
-  switch (role) {
+  switch (data.role) {
     case "user":
-      person = await getUserByEmail(email);
+      result = await getUserByEmail(data.email);
+      break;
+    case "coach":
+      result = await getCoachByEmail(data.email);
+      break;
+    default:
+      result = await getAdminByEmail(data.email);
+  }
+
+  if (result == undefined) {
+    throw new BadRequestError("User with this email not found");
+  }
+
+  sendOtp(data.email);
+};
+
+/** RESET PASSWORD
+ * This function will validate otp
+ * If success will reset password
+ */
+export const resetPassword = async (data: ResetPasswordSchema) => {
+  const otp = await redisClient.get(data.email);
+
+  if (otp === null || otp !== data.otp) {
+    throw new BadRequestError("Invalid OTP code");
+  }
+
+  let targetTable = null;
+
+  switch (data.role) {
+    case "user":
       targetTable = user;
       break;
     case "coach":
-      person = await getCoachByEmail(email);
       targetTable = coach;
       break;
-    case "admin":
-      person = await getAdminByEmail(email);
+    default:
       targetTable = admin;
       break;
-    default:
-      return null; 
   }
 
-  if (!person) return null;
-  const hashedPassword = await hashPassword(password);
   await db
     .update(targetTable)
-    .set({ password: hashedPassword })
-    .where(eq(targetTable.email, email));
-
-  return true;
+    .set({ password: data.newPassword })
+    .where(eq(targetTable.email, data.email));
 };
 
+/* ------------- PRIVATE METHOD ------------- */
 
+export const sendOtp = async (email: string) => {
+  const result = generateOtp();
+  await redisClient.set(email, result.otp, { EX: 60 * 5 });
+  await sendOtpEmail(email, result.otp);
+};

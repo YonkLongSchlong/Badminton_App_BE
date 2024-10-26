@@ -2,177 +2,97 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import {
-  authenticateOtp,
-  generateToken,
-  authenticatePassword,
-  sendOtpToUser,
-  updateUserPasswordByEmail,
+  authenticateLogin,
+  authenticateLoginOtp,
+  forgotPassword,
 } from "../services/authService";
-import { createUser, getUserByEmail } from "../services/userService";
-import { createCoach, getCoachByEmail } from "../services/coachService";
-import { createAdmin, getAdminByEmail } from "../services/adminService";
-
-import { type UserCreateSchema } from "../db/schema/user";
-import { type AdminCreateSchema } from "../db/schema/admin";
-import { type CoachCreateSchema } from "../db/schema/coach";
 import { ApiResponse, ApiError } from "../../types";
-import { allRoleAuthorization } from "../middlewares/authMiddlewares";
+
+const registerSchema = z.object({
+  role: z.string(),
+  email: z.string().email(),
+  password: z.string(),
+});
 
 const loginSchema = z.object({
   role: z.string(),
-  email: z.string(),
+  email: z.string().email(),
   password: z.string(),
 });
 
 const otpSchema = z.object({
   otp: z.string(),
   role: z.string(),
-  email: z.string(),
-  password: z.string(),
-  user_name: z.string(),
+  email: z.string().email(),
 });
 
-const emailSchema = z.object({
-  email: z.string().email(),
+const forgotPasswordSchema = z.object({
   role: z.string(),
+  email: z.string().email(),
 });
 
 const resetPasswordSchema = z.object({
-  email: z.string().email(),
   otp: z.string(),
+  email: z.string().email(),
   newPassword: z.string(),
   role: z.string(),
 });
 
+export type RegisterSchema = z.infer<typeof registerSchema>;
 export type LoginSchema = z.infer<typeof loginSchema>;
 export type OtpSchema = z.infer<typeof otpSchema>;
-
+export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
 export const authRoute = new Hono();
 
+/**
+ * POST: /login
+ */
 authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
   try {
-    let user = null;
-    let resultPassword = null;
     const data = c.req.valid("json");
+    await authenticateLogin(data);
 
-    if (data.role == "user") {
-      user = await getUserByEmail(data.email);
-    } else if (data.role == "coach") {
-      user = await getCoachByEmail(data.email);
-    } else {
-      user = await getAdminByEmail(data.email);
-    }
-
-    if (!user) {
-      c.status(404);
-      return c.text("User not found");
-    }
-
-    resultPassword = await authenticatePassword(user, data);
-    if (resultPassword === null || resultPassword === false) {
-      c.status(400);
-      return c.text("Invalid credentials");
-    }
-    const token = await generateToken(data);
-
-    return c.json({
-      token: token,
-      person: user,
-    });
+    return c.json(new ApiResponse(200, `An otp has been sent to your email`));
   } catch (error) {
     console.log(error);
-    c.status(500);
-    return c.text("Something went wrong, please try again");
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
   }
 });
 
+/**
+ * POST: /verify-otp
+ */
 authRoute.post("/verify-otp", zValidator("json", otpSchema), async (c) => {
   try {
     const data = c.req.valid("json");
-    const resultOtp = await authenticateOtp(data.email, data.otp);
+    const result = await authenticateLoginOtp(data);
 
-    if (resultOtp === null || resultOtp === false) {
-      c.status(400);
-      return c.text("Invalid credentials");
-    }
-    const role = data.role;
-    const { otp, ...persionData } = data;
-    if (role == "user") {
-      const userId = await createUser(persionData as UserCreateSchema);
-      return c.json(new ApiResponse(200, "User created successfully", userId));
-    } else if (role == "admin") {
-      const adminId = await createAdmin(persionData as AdminCreateSchema);
-      return c.json(
-        new ApiResponse(200, "Admin created successfully", adminId)
-      );
-    } else {
-      const coachId = await createCoach(persionData as CoachCreateSchema);
-      return c.json(
-        new ApiResponse(200, "Coach created successfully", coachId)
-      );
-    }
+    return c.json(new ApiResponse(200, `Validated successfully`, result));
   } catch (error) {
     console.log(error);
-    c.status(500);
-    return c.text("Something went wrong, please try again");
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
   }
 });
 
+/**
+ * POST: /forgot-password
+ */
 authRoute.post(
   "/forgot-password",
-  zValidator("json", emailSchema),
+  zValidator("json", forgotPasswordSchema),
   async (c) => {
     try {
       const data = c.req.valid("json");
-      let user = null;
+      await forgotPassword(data);
 
-      if (data.role == "user") {
-        user = await getUserByEmail(data.email);
-      } else if (data.role == "coach") {
-        user = await getCoachByEmail(data.email);
-      } else {
-        user = await getAdminByEmail(data.email);
-      }
-
-      if (!user) {
-        return c.json(new ApiResponse(404, "User not found"),404);
-      }
-
-      const result = await sendOtpToUser(data.email);
-      return c.json(new ApiResponse(200, "OTP sent to email successfully", result),200);
+      return c.json(new ApiResponse(200, "OTP sent to email successfully"));
     } catch (error) {
-      if (error instanceof Error) {
-        return c.json(new ApiError(500, error.name, error.message),500);
-      }
-    }
-  }
-);
-
-authRoute.post(
-  "/reset-password",
-  zValidator("json", resetPasswordSchema),
-  async (c) => {
-    try {
-      const data = c.req.valid("json");
-
-      const resultOtp = await authenticateOtp(data.email, data.otp);
-
-      if (resultOtp === null || resultOtp === false) {
-        c.status(400);
-        return c.text("Invalid credentials");
-      }
-
-      const result = await updateUserPasswordByEmail(
-        data.email,
-        data.newPassword,
-        data.role
-      );
-      if (result === null) {
-        return c.json(new ApiResponse(404, `User not found`), 404);
-      }
-
-      return c.json(new ApiResponse(200, "Password reset successfully",));
-    } catch (error) {
+      console.log(error);
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
@@ -180,11 +100,32 @@ authRoute.post(
   }
 );
 
-authRoute.post('/logout', async (c) => {
+/**
+ * POST: /reset-password
+ */
+authRoute.post(
+  "/reset-password",
+  zValidator("json", forgotPasswordSchema),
+  async (c) => {
+    try {
+      const data = c.req.valid("json");
+      await forgotPassword(data);
+
+      return c.json(new ApiResponse(200, "OTP sent to email successfully"));
+    } catch (error) {
+      console.log(error);
+      if (error instanceof Error) {
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
+    }
+  }
+);
+
+authRoute.post("/logout", async (c) => {
   try {
-    return c.json(new ApiResponse(200, 'Logout successful'));
+    return c.json(new ApiResponse(200, "Logout successful"));
   } catch (error) {
     console.error(error);
-    return c.json(new ApiResponse(500, 'Something went wrong'), 500);
+    return c.json(new ApiResponse(500, "Something went wrong"), 500);
   }
 });

@@ -5,7 +5,8 @@ export const roleEnum = pgEnum("role", ["admin", "user", "coach"]);
 
 export const persons = {
   ...baseEntity,
-  user_name: varchar("user_name", { length: 100 }).notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   dob: date("dob"),

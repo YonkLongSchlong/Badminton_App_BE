@@ -5,13 +5,16 @@ import {
   deleteUser,
   getAllCoaches,
   getAllUsers,
-  authenticateAdminRegister,
-  deleteCoach
+  deleteCoach,
 } from "../services/adminService";
 import { zValidator } from "@hono/zod-validator";
 import { adminCreateSchema } from "../db/schema/admin";
-import { ApiError, ApiResponse } from "../../types";
-import { freeCourseCreateSchema } from "../db/schema/free_course";
+import {
+  ApiError,
+  ApiResponse,
+  BadRequestError,
+  NotFoundError,
+} from "../../types";
 
 export const adminRoutes = new Hono();
 
@@ -24,16 +27,13 @@ adminRoutes.post(
   async (c) => {
     try {
       const data = c.req.valid("json");
-      const result = await authenticateAdminRegister(data);
-      if (result === false) {
-        return c.json(
-          new ApiResponse(400, "User with this email already exist"),
-          400
-        );
-      }
+      await createAdmin(data);
 
-      return c.json(new ApiResponse(200, "OTP sent to email successfully", result));
+      return c.json(new ApiResponse(200, "Admin created successfully"));
     } catch (error) {
+      if (error instanceof BadRequestError) {
+        return c.json(new ApiError(400, error.name, error.message), 400);
+      }
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
@@ -62,14 +62,13 @@ adminRoutes.get("/users", adminAuthorization, async (c) => {
 adminRoutes.delete("/user/:id", adminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const result = await deleteUser(id);
+    await deleteUser(id);
 
-    if (result === null) {
-      return c.json(new ApiResponse(404, `User with id ${id} not found`), 404);
-    }
-
-    return c.json(new ApiResponse(200, `User deleted successfully`, result));
+    return c.json(new ApiResponse(200, `User deleted successfully`));
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
@@ -104,6 +103,9 @@ adminRoutes.delete("/coach/:id", adminAuthorization, async (c) => {
 
     return c.json(new ApiResponse(200, `Coach deleted successfully`, result));
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
     }

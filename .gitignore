@@ -162,6 +162,7 @@ dist
 .vscode/
 
 # yarn v2
+.env
 
 .yarn/cache
 .yarn/unplugged
