@@ -16,6 +16,6 @@ app
   .route("/coaches", coachRoutes)
   .route("/admin", adminRoutes)
   .route("/auth", authRoute)
-  .route("/course", courseRoutes);
+  .route("/courses", courseRoutes);
 
 export default app;

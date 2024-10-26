@@ -5,6 +5,7 @@ import {
   type FreeCourseCreateSchema,
   type FreeCourseUpdateSchema,
 } from "../db/schema/free_course";
+import { NotFoundError } from "../../types";
 
 export const createFreeCourse = async (data: FreeCourseCreateSchema) => {
   return await db.insert(freeCourse).values(data).returning();
@@ -16,10 +17,8 @@ export const getAllFreeCourse = async () => {
 
 export const getFreeCourse = async (id: number) => {
   const result = await getFreeCourseById(id);
-
-  if (result === undefined) {
-    return null;
-  }
+  if (result === undefined)
+    throw new NotFoundError(`Course with id ${id} not found`);
 
   return result;
 };
@@ -29,9 +28,8 @@ export const updateFreeCourse = async (
   data: FreeCourseUpdateSchema
 ) => {
   const freeCourseToUpdate = await getFreeCourseById(id);
-  if (freeCourseToUpdate === undefined) {
-    return null;
-  }
+  if (freeCourseToUpdate === undefined)
+    throw new NotFoundError(`Course with id ${id} not found`);
 
   return await db
     .update(freeCourse)
@@ -42,12 +40,10 @@ export const updateFreeCourse = async (
 
 export const deleteFreeCourse = async (id: number) => {
   const freeCourseToUpdate = await getFreeCourseById(id);
-  if (freeCourseToUpdate === undefined) {
-    return null;
-  }
+  if (freeCourseToUpdate === undefined)
+    throw new NotFoundError(`Course with id ${id} not found`);
 
   await db.delete(freeCourse).where(eq(freeCourse.id, id));
-  return true;
 };
 
 /* ------------------- PRIVATE METHOD -------------------  */

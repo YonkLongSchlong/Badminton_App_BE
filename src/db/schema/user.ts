@@ -42,7 +42,6 @@ export const userUpdateSchema = createInsertSchema(user, {
 export const userPasswordSchema = z.object({
   password: z.string(),
   newPassword: z.string(),
-  confirmPassword: z.string(),
 });
 
 export type UserCreateSchema = z.infer<typeof userCreateSchema>;

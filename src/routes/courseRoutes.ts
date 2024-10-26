@@ -8,7 +8,12 @@ import {
   freeCourseCreateSchema,
   freeCourseUpdateSchema,
 } from "../db/schema/free_course";
-import { ApiError, ApiResponse } from "../../types";
+import {
+  ApiError,
+  ApiResponse,
+  BadRequestError,
+  NotFoundError,
+} from "../../types";
 import {
   createFreeCourse,
   deleteFreeCourse,
@@ -20,7 +25,7 @@ import {
 export const courseRoutes = new Hono();
 
 /**
- * POST: /course/free
+ * POST: /courses/free
  */
 courseRoutes.post(
   "/free",
@@ -29,11 +34,9 @@ courseRoutes.post(
   async (c) => {
     try {
       const data = c.req.valid("json");
-      const result = await createFreeCourse(data);
+      await createFreeCourse(data);
 
-      return c.json(
-        new ApiResponse(200, "Free course created successfully", result)
-      );
+      return c.json(new ApiResponse(200, "Free course created successfully"));
     } catch (error) {
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
@@ -43,13 +46,16 @@ courseRoutes.post(
 );
 
 /**
- * GET: /course/free
+ * GET: /courses/free
  */
-courseRoutes.get("/free/dfd", coachAndAdminAuthorization, async (c) => {
+courseRoutes.get("/free", allRoleAuthorization, async (c) => {
   try {
     const result = await getAllFreeCourse();
     return c.json(new ApiResponse(200, `All free course`, result));
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
@@ -57,21 +63,18 @@ courseRoutes.get("/free/dfd", coachAndAdminAuthorization, async (c) => {
 });
 
 /**
- * GET: /course/free/:id
+ * GET: /courses/free/:id
  */
-courseRoutes.get("/free/:id", coachAndAdminAuthorization, async (c) => {
+courseRoutes.get("/free/:id", allRoleAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const result = await getFreeCourse(id);
-    if (result === null) {
-      return c.json(
-        new ApiResponse(400, `Free course with ${id} not found`),
-        400
-      );
-    }
 
-    return c.json(new ApiResponse(200, `Free course with id ${id}`, result));
+    return c.json(result);
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
@@ -79,7 +82,7 @@ courseRoutes.get("/free/:id", coachAndAdminAuthorization, async (c) => {
 });
 
 /**
- * PATCH: /course/free/:id
+ * PATCH: /courses/free/:id
  */
 courseRoutes.patch(
   "/free/:id",
@@ -91,17 +94,13 @@ courseRoutes.patch(
       const data = c.req.valid("json");
       const result = await updateFreeCourse(id, data);
 
-      if (result === null) {
-        return c.json(
-          new ApiResponse(400, `Free course with ${id} not found`),
-          400
-        );
-      }
-
       return c.json(
         new ApiResponse(200, "Free course updated successfully", result)
       );
     } catch (error) {
+      if (error instanceof NotFoundError) {
+        return c.json(new ApiError(404, error.name, error.message), 404);
+      }
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
@@ -110,22 +109,18 @@ courseRoutes.patch(
 );
 
 /**
- * DELETE: /course/free/:id
+ * DELETE: /courses/free/:id
  */
 courseRoutes.delete("/free/:id", coachAndAdminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const result = await deleteFreeCourse(id);
-
-    if (result === null) {
-      return c.json(
-        new ApiResponse(400, `Free course with ${id} not found`),
-        400
-      );
-    }
+    await deleteFreeCourse(id);
 
     return c.json(new ApiResponse(200, "Free course deleted successfully"));
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
