@@ -1,12 +1,4 @@
-import {
-  date,
-  decimal,
-  integer,
-  pgEnum,
-  pgTable,
-  text,
-} from "drizzle-orm/pg-core";
-import { baseEntity } from "./base";
+import { decimal, integer, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
 import { coach } from "./coach";
 import { category } from "./category";
 import { relations } from "drizzle-orm";
@@ -18,20 +10,16 @@ import { courses } from "./course";
 export const courseStatus = pgEnum("status", ["open", "close"]);
 
 export const paidCourse = pgTable("paid_course", {
-  ...baseEntity,
   ...courses,
-  register_start_date: date("register_start_date"),
-  register_end_date: date("register_end_date"),
-  begin_date: date("begin_date"),
-  end_date: date("end_date"),
   duration: text("duration"),
   price: decimal("price"),
-  student_quantity: integer("student_quantity"),
+  lessonQuantity: integer("lesson_quantity"),
+  studentQuantity: integer("student_quantity"),
   status: courseStatus("status"),
-  coach_id: integer("coach_id")
+  coachId: integer("coach_id")
     .references(() => coach.id)
     .notNull(),
-  category_id: integer("category_id")
+  categoryId: integer("category_id")
     .references(() => category.id)
     .notNull(),
 });
@@ -39,10 +27,10 @@ export const paidCourse = pgTable("paid_course", {
 export const paidCourseRelations = relations(paidCourse, ({ one, many }) => ({
   user_course: many(user_course),
   category: one(category, {
-    fields: [paidCourse.category_id],
+    fields: [paidCourse.categoryId],
     references: [category.id],
   }),
-  coach: one(coach, { fields: [paidCourse.coach_id], references: [coach.id] }),
+  coach: one(coach, { fields: [paidCourse.coachId], references: [coach.id] }),
 }));
 
 export const courseCreateSchema = createInsertSchema(paidCourse, {

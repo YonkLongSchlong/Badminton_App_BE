@@ -1,5 +1,4 @@
-import { integer, pgTable } from "drizzle-orm/pg-core";
-import { baseEntity } from "./base";
+import { integer, pgTable, serial, timestamp } from "drizzle-orm/pg-core";
 import { user } from "./user";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -7,7 +6,9 @@ import type { z } from "zod";
 import { paidCourse } from "./paid_course";
 
 export const user_course = pgTable("users_courses", {
-  ...baseEntity,
+  id: serial("id").primaryKey(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
   user_id: integer("user_id")
     .references(() => user.id)
     .notNull(),

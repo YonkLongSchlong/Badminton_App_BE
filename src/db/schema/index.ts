@@ -6,6 +6,6 @@ export { coach } from "./coach";
 export { category, categoryRelations } from "./category";
 export { order, orderRelations } from "./order";
 export { user_course, userCourseRelations } from "./user_course";
-export { roleEnum } from "./person";
 export { courseType } from "./course";
 export { courseStatus } from "./paid_course";
+export { freeLesson, freeLessonRelations } from "./free_lesson";

@@ -1,39 +1,40 @@
-import { integer, jsonb, pgTable } from "drizzle-orm/pg-core";
-import { baseEntity } from "./base";
+import { integer, pgTable } from "drizzle-orm/pg-core";
 import { category } from "./category";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import type { z } from "zod";
 import { courses } from "./course";
+import { freeLesson } from "./free_lesson";
 
 export const freeCourse = pgTable("free_course", {
-  ...baseEntity,
   ...courses,
-  content: jsonb("content").notNull(),
-  category_id: integer("category_id")
+  lessonQuantity: integer("lesson_quantity").default(0),
+  categoryId: integer("category_id")
     .references(() => category.id)
     .notNull(),
 });
 
-export const freeCourseRelations = relations(freeCourse, ({ one }) => ({
+export const freeCourseRelations = relations(freeCourse, ({ one, many }) => ({
+  freeLesson: many(freeLesson),
   category: one(category, {
-    fields: [freeCourse.category_id],
+    fields: [freeCourse.categoryId],
     references: [category.id],
   }),
 }));
 
 export const freeCourseCreateSchema = createInsertSchema(freeCourse, {
   id: (schema) => schema.id.optional(),
+  lessonQuantity: (schema) => schema.lessonQuantity.optional(),
 });
 
 export const freeCourseUpdateSchema = createInsertSchema(freeCourse, {
   id: (schema) => schema.id.optional(),
   name: (schema) => schema.name.optional(),
   description: (schema) => schema.description.optional(),
-  content: (schema) => schema.content.optional(),
   thumbnail: (schema) => schema.thumbnail.optional(),
   type: (schema) => schema.type.optional(),
-  category_id: (schema) => schema.category_id.optional(),
+  lessonQuantity: (schema) => schema.lessonQuantity.optional(),
+  categoryId: (schema) => schema.categoryId.optional(),
 });
 
 export const freeCourseSchema = createInsertSchema(freeCourse);

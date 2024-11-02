@@ -6,17 +6,22 @@ import {
   type FreeCourseUpdateSchema,
 } from "../db/schema/free_course";
 import { NotFoundError } from "../../types";
+import { freeLesson } from "../db/schema/free_lesson";
 
 export const createFreeCourse = async (data: FreeCourseCreateSchema) => {
-  return await db.insert(freeCourse).values(data).returning();
+  return await db.insert(freeCourse).values(data);
 };
 
 export const getAllFreeCourse = async () => {
   return await db.select().from(freeCourse);
 };
 
-export const getFreeCourse = async (id: number) => {
-  const result = await getFreeCourseById(id);
+export const getFreeCourseById = async (id: number) => {
+  const result = await db.query.freeCourse.findFirst({
+    where: eq(freeCourse.id, id),
+    with: { freeLesson: true },
+  });
+
   if (result === undefined)
     throw new NotFoundError(`Course with id ${id} not found`);
 
@@ -44,9 +49,4 @@ export const deleteFreeCourse = async (id: number) => {
     throw new NotFoundError(`Course with id ${id} not found`);
 
   await db.delete(freeCourse).where(eq(freeCourse.id, id));
-};
-
-/* ------------------- PRIVATE METHOD -------------------  */
-const getFreeCourseById = async (id: number) => {
-  return await db.query.freeCourse.findFirst({ where: eq(freeCourse.id, id) });
 };

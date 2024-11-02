@@ -6,40 +6,41 @@ import {
   coachAndAdminAuthorization,
 } from "../middlewares/authMiddlewares";
 import {
-  freeCourseCreateSchema,
-  freeCourseUpdateSchema,
-} from "../db/schema/free_course";
-import {
   ApiError,
   ApiResponse,
   BadRequestError,
   NotFoundError,
 } from "../../types";
 import {
-  createFreeCourse,
-  deleteFreeCourse,
-  getAllFreeCourse,
-  getFreeCourseById,
-  updateFreeCourse,
-} from "../services/courseService";
+  freeLessonCreateSchema,
+  freeLessonUpdateSchema,
+} from "../db/schema/free_lesson";
+import {
+  createFreeLesson,
+  deleteFreeLesson,
+  getFreeLessonById,
+  updateFreeLesson,
+} from "../services/lessonService";
 
-export const courseRoutes = new Hono();
+export const lessonRoute = new Hono();
 
 /**
- * POST: /courses/free
+ * POST: /lessons/free
  */
-courseRoutes.post(
+lessonRoute.post(
   "/free",
   adminAuthorization,
-  zValidator("json", freeCourseCreateSchema),
+  zValidator("json", freeLessonCreateSchema),
   async (c) => {
     try {
       const data = c.req.valid("json");
-      await createFreeCourse(data);
+      await createFreeLesson(data);
 
-      return c.json(new ApiResponse(200, "Free course created successfully"));
+      return c.json(new ApiResponse(200, "Lesson created successfully"));
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof BadRequestError) {
+        return c.json(new ApiError(400, error.name, error.message), 400);
+      } else if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
     }
@@ -47,29 +48,12 @@ courseRoutes.post(
 );
 
 /**
- * GET: /courses/free
+ * GET: /lessons/free/:id
  */
-courseRoutes.get("/free", allRoleAuthorization, async (c) => {
-  try {
-    const result = await getAllFreeCourse();
-    return c.json(new ApiResponse(200, `All free course`, result));
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      return c.json(new ApiError(404, error.name, error.message), 404);
-    }
-    if (error instanceof Error) {
-      return c.json(new ApiError(500, error.name, error.message), 500);
-    }
-  }
-});
-
-/**
- * GET: /courses/free/:id
- */
-courseRoutes.get("/free/:id", allRoleAuthorization, async (c) => {
+lessonRoute.get("/free/:id", allRoleAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const result = await getFreeCourseById(id);
+    const result = await getFreeLessonById(id);
 
     return c.json(result);
   } catch (error) {
@@ -83,20 +67,20 @@ courseRoutes.get("/free/:id", allRoleAuthorization, async (c) => {
 });
 
 /**
- * PATCH: /courses/free/:id
+ * PATCH: /lessons/free/:id
  */
-courseRoutes.patch(
+lessonRoute.patch(
   "/free/:id",
   adminAuthorization,
-  zValidator("json", freeCourseUpdateSchema),
+  zValidator("json", freeLessonUpdateSchema),
   async (c) => {
     try {
       const id = Number.parseInt(c.req.param("id"));
       const data = c.req.valid("json");
-      const result = await updateFreeCourse(id, data);
+      const result = await updateFreeLesson(id, data);
 
       return c.json(
-        new ApiResponse(200, "Free course updated successfully", result)
+        new ApiResponse(200, "Free lesson updated successfully", result)
       );
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -110,14 +94,14 @@ courseRoutes.patch(
 );
 
 /**
- * DELETE: /courses/free/:id
+ * DELETE: /lessons/free/:id
  */
-courseRoutes.delete("/free/:id", adminAuthorization, async (c) => {
+lessonRoute.delete("/free/:id", adminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    await deleteFreeCourse(id);
+    await deleteFreeLesson(id);
 
-    return c.json(new ApiResponse(200, "Free course deleted successfully"));
+    return c.json(new ApiResponse(200, "Free lesson deleted successfully"));
   } catch (error) {
     if (error instanceof NotFoundError) {
       return c.json(new ApiError(404, error.name, error.message), 404);

@@ -1,12 +1,30 @@
-import { pgTable, text } from "drizzle-orm/pg-core";
-import { persons } from "./person";
+import {
+  date,
+  pgEnum,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 import { paidCourse } from "./paid_course";
 
+export const roleEnum = pgEnum("role", ["admin", "user", "coach"]);
+
 export const coach = pgTable("coach", {
-  ...persons,
+  id: serial("id").primaryKey(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  dob: date("dob"),
+  gender: text("gender"),
+  avatar: text("avatar"),
+  role: roleEnum("role"),
   description: text("description"),
 });
 
