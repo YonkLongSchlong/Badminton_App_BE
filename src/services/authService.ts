@@ -15,7 +15,7 @@ import { getCoachByEmail } from "./coachService";
 import { getAdminByEmail } from "./adminService";
 import { admin, coach, user } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { BadRequestError } from "../../types";
+import { BadRequestError, NotFoundError } from "../../types";
 
 /** AUTHENTICATE LOGIN
  * This function will authenticate password base on role
@@ -36,10 +36,11 @@ export const authenticateLogin = async (data: LoginSchema) => {
   }
 
   if (result == undefined) {
-    throw new BadRequestError("User with this email not found");
+    throw new NotFoundError("User with this email not found");
   }
 
   const check = await compare(data.password, result.password);
+
   if (!check) {
     throw new BadRequestError("Invalid credential");
   }
@@ -64,12 +65,13 @@ export const authenticateLoginOtp = async (data: OtpSchema) => {
     exp: Math.floor(Date.now() / 1000) + 60 * 260,
   };
 
-  const token = Promise.all([
+  const promise = await Promise.all([
     sign(payload, Bun.env.JWT_SECRET || ""),
     redisClient.del(data.email),
+    db.query.user.findFirst({ where: eq(user.email, data.email) }),
   ]);
 
-  return token;
+  return { token: promise[0], user: promise[2] };
 };
 
 /** FORGOT PASSWORD
@@ -131,6 +133,11 @@ export const resetPassword = async (data: ResetPasswordSchema) => {
 /* ------------- PRIVATE METHOD ------------- */
 
 export const sendOtp = async (email: string) => {
+  const otp = await redisClient.get(email);
+  if (otp !== null) {
+    redisClient.del(email);
+  }
+
   const result = generateOtp();
   await redisClient.set(email, result.otp, { EX: 60 * 5 });
   await sendOtpEmail(email, result.otp);

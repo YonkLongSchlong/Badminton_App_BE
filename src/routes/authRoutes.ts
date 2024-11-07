@@ -6,7 +6,12 @@ import {
   authenticateLoginOtp,
   forgotPassword,
 } from "../services/authService";
-import { ApiResponse, ApiError } from "../../types";
+import {
+  ApiResponse,
+  ApiError,
+  BadRequestError,
+  NotFoundError,
+} from "../../types";
 
 const registerSchema = z.object({
   role: z.string(),
@@ -55,8 +60,11 @@ authRoute.post("/login", zValidator("json", loginSchema), async (c) => {
 
     return c.json(new ApiResponse(200, `An otp has been sent to your email`));
   } catch (error) {
-    console.log(error);
-    if (error instanceof Error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    } else if (error instanceof BadRequestError) {
+      return c.json(new ApiError(400, error.name, error.message), 400);
+    } else if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
@@ -72,8 +80,11 @@ authRoute.post("/verify-otp", zValidator("json", otpSchema), async (c) => {
 
     return c.json(new ApiResponse(200, `Validated successfully`, result));
   } catch (error) {
-    console.log(error);
-    if (error instanceof Error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    } else if (error instanceof BadRequestError) {
+      return c.json(new ApiError(400, error.name, error.message), 400);
+    } else if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
@@ -92,8 +103,11 @@ authRoute.post(
 
       return c.json(new ApiResponse(200, "OTP sent to email successfully"));
     } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
+      if (error instanceof NotFoundError) {
+        return c.json(new ApiError(404, error.name, error.message), 404);
+      } else if (error instanceof BadRequestError) {
+        return c.json(new ApiError(400, error.name, error.message), 400);
+      } else if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
     }
@@ -113,8 +127,11 @@ authRoute.post(
 
       return c.json(new ApiResponse(200, "OTP sent to email successfully"));
     } catch (error) {
-      console.log(error);
-      if (error instanceof Error) {
+      if (error instanceof NotFoundError) {
+        return c.json(new ApiError(404, error.name, error.message), 404);
+      } else if (error instanceof BadRequestError) {
+        return c.json(new ApiError(400, error.name, error.message), 400);
+      } else if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
     }
