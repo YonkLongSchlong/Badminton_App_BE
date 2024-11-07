@@ -73,13 +73,13 @@ export const authenticateLoginOtp = async (data: OtpSchema) => {
   let result = null;
   switch (data.role) {
     case "user":
-      result = db.query.user.findFirst({ where: eq(user.email, data.email) })
+      result = await getUserByEmail( data.email)
       break;
     case "coach":
-      result = db.query.coach.findFirst({ where: eq(coach.email, data.email) })
+      result = await getCoachByEmail(data.email)
       break;
     default:
-      result = db.query.admin.findFirst({ where: eq(admin.email, data.email) });
+      result = await getAdminByEmail( data.email )
   }
 
   return { token: promise[0], user: result };
