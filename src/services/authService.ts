@@ -68,10 +68,21 @@ export const authenticateLoginOtp = async (data: OtpSchema) => {
   const promise = await Promise.all([
     sign(payload, Bun.env.JWT_SECRET || ""),
     redisClient.del(data.email),
-    db.query.user.findFirst({ where: eq(user.email, data.email) }),
   ]);
 
-  return { token: promise[0], user: promise[2] };
+  let result = null;
+  switch (data.role) {
+    case "user":
+      result = db.query.user.findFirst({ where: eq(user.email, data.email) })
+      break;
+    case "coach":
+      result = db.query.coach.findFirst({ where: eq(coach.email, data.email) })
+      break;
+    default:
+      result = db.query.admin.findFirst({ where: eq(admin.email, data.email) });
+  }
+
+  return { token: promise[0], user: result };
 };
 
 /** FORGOT PASSWORD
