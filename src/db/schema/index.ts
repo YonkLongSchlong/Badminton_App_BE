@@ -1,5 +1,5 @@
 export { user, userRelations } from "./user";
-export { admin } from "./admin";
+export { admin, roleEnum } from "./admin";
 export { freeCourse, freeCourseRelations } from "./free_course";
 export { paidCourse, paidCourseRelations } from "./paid_course";
 export { coach, coachRelations } from "./coach";
