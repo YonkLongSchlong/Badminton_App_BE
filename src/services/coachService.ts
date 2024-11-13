@@ -9,6 +9,8 @@ import type {
 } from "../db/schema/coach";
 import { hashPassword } from "../../utils/authenticateUtils";
 import { BadRequestError, NotFoundError } from "../../types";
+import { s3Client } from "../../utils/configAWS";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 export const createCoach = async (data: CoachCreateSchema) => {
   const checkCoachEmail = await getCoachByEmail(data.email);
@@ -43,6 +45,34 @@ export const updateCoach = async (id: number, data: CoachUpdateSchema) => {
     .where(eq(coach.id, id))
     .returning();
   result.password = "";
+
+  return result;
+};
+
+export const updateCoachAvatar = async (id: number, file: File) => {
+  const coachToUpdate = await getCoachById(id);
+  if (coachToUpdate === undefined)
+    throw new NotFoundError(`Coach with id ${id} not found`);
+
+  const fileBuffer = await file.arrayBuffer();
+  const base64File = Buffer.from(fileBuffer).toString("base64");
+
+  const uploadParams = {
+    Bucket: Bun.env.S3_AVATAR_BUCKET,
+    Key: file.name,
+    Body: Buffer.from(base64File, "base64"),
+    ContentEncoding: "base64",
+    ContentType: file.type,
+  };
+
+  await s3Client.send(new PutObjectCommand(uploadParams));
+  const avatarUrl = `https://${uploadParams.Bucket}.s3.${Bun.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+  const [result] = await db
+    .update(coach)
+    .set({ avatar: avatarUrl })
+    .where(eq(coach.id, id))
+    .returning();
 
   return result;
 };

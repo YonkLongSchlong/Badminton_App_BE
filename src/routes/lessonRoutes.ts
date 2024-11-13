@@ -20,9 +20,35 @@ import {
   deleteFreeLesson,
   getFreeLessonById,
   updateFreeLesson,
+  uploadImageFreeLesson,
 } from "../services/lessonService";
 
 export const lessonRoute = new Hono();
+
+/**
+ * POST: /lessons/free/image
+ */
+lessonRoute.patch("/free/image", adminAuthorization, async (c) => {
+  try {
+    const formData = await c.req.formData();
+    const file = formData.get("image") as File;
+
+    const result = await uploadImageFreeLesson(file);
+
+    return c.json(new ApiResponse(200, "Image uploaded successfully", result));
+  } catch (error) {
+    if (error instanceof BadRequestError) {
+      return c.json(new ApiError(400, error.name, error.message), 400);
+    }
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      console.log(error.message);
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
 
 /**
  * POST: /lessons/free

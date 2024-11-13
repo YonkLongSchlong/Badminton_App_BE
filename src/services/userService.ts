@@ -1,6 +1,7 @@
 import { db } from "../db";
 import {
   user,
+  type UserAvatarSchema,
   type UserCreateSchema,
   type UserPasswordSchema,
   type UserUpdateSchema,
@@ -9,6 +10,8 @@ import { eq } from "drizzle-orm";
 import { compare } from "bcrypt";
 import { hashPassword } from "../../utils/authenticateUtils";
 import { BadRequestError, NotFoundError } from "../../types";
+import { s3Client } from "../../utils/configAWS";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 export const createUser = async (data: UserCreateSchema) => {
   const checkUserEmail = await getUserByEmail(data.email);
@@ -36,7 +39,7 @@ export const updateUser = async (id: number, data: UserUpdateSchema) => {
 
   const checkUserEmail = await getUserByEmail(data.email);
   if (checkUserEmail !== undefined && checkUserEmail.id !== userToUpdate.id)
-    throw new BadRequestError(`Email ${data.email} have already registered`);
+    throw new BadRequestError(`This email have already registered`);
 
   const [result] = await db
     .update(user)
@@ -46,6 +49,34 @@ export const updateUser = async (id: number, data: UserUpdateSchema) => {
   result.password = "";
   return result;
 };
+
+export const updateUserAvatar = async (id: number, file: File) => {
+  const userToUpdate = await getUserById(id);
+  if (userToUpdate === undefined)
+    throw new NotFoundError(`User with id ${id} not found`);
+
+   const fileBuffer = await file.arrayBuffer();
+   const base64File = Buffer.from(fileBuffer).toString("base64");
+
+  const uploadParams = {
+    Bucket: Bun.env.S3_AVATAR_BUCKET,
+    Key: file.name,
+    Body: Buffer.from(base64File, "base64"),
+    ContentEncoding: "base64",
+    ContentType: file.type,
+  };
+
+  await s3Client.send(new PutObjectCommand(uploadParams));
+  const avatarUrl = `https://${uploadParams.Bucket}.s3.${Bun.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+  const [result] = await db
+    .update(user)
+    .set({ avatar: avatarUrl })
+    .where(eq(user.id, id))
+    .returning();
+
+  return result;
+}
 
 export const updateUserPassword = async (
   id: number,

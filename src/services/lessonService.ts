@@ -13,8 +13,32 @@ import {
   type PaidLessonCreateSchema,
 } from "../db/schema/paid_lesson";
 import type { PaidCourseUpdateSchema } from "../db/schema/paid_course";
+import { s3Client } from "../../utils/configAWS";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 /* -------------- FREE LESSON ------------------- */
+export const uploadImageFreeLesson = async (file: File) => {
+  try {
+    const fileBuffer = await file.arrayBuffer();
+    const base64File = Buffer.from(fileBuffer).toString("base64");
+
+    const uploadParams = {
+      Bucket: Bun.env.S3_IMAGE_FREE_LESSON_BUCKET,
+      Key: file.name,
+      Body: Buffer.from(base64File, "base64"),
+      ContentEncoding: "base64",
+      ContentType: file.type,
+    };
+
+    await s3Client.send(new PutObjectCommand(uploadParams));
+    const avatarUrl = `https://${uploadParams.Bucket}.s3.${Bun.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+    return avatarUrl;
+  } catch (error) {
+    throw new Error("Failed to added new lesson");
+  }
+};
+
 export const createFreeLesson = async (data: FreeLessonCreateSchema) => {
   const freeCourseToUpdate = await getFreeCourseById(data.freeCourseId!);
 
@@ -80,6 +104,28 @@ export const getFreeLessonById = async (id: number) => {
 };
 
 /* -------------- PAID LESSON ------------------- */
+export const uploadImagePaidLesson = async (file: File) => {
+  try {
+    const fileBuffer = await file.arrayBuffer();
+    const base64File = Buffer.from(fileBuffer).toString("base64");
+
+    const uploadParams = {
+      Bucket: Bun.env.S3_IMAGE_PAID_LESSON_BUCKET,
+      Key: file.name,
+      Body: Buffer.from(base64File, "base64"),
+      ContentEncoding: "base64",
+      ContentType: file.type,
+    };
+
+    await s3Client.send(new PutObjectCommand(uploadParams));
+    const avatarUrl = `https://${uploadParams.Bucket}.s3.${Bun.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+    return avatarUrl;
+  } catch (error) {
+    throw new Error("Failed to added new lesson");
+  }
+};
+
 export const createPaidLesson = async (data: PaidLessonCreateSchema) => {
   const paidCourseToUpdate = await getPaidCourseById(data.paidCourseId!);
 

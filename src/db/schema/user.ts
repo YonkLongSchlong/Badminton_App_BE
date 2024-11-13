@@ -50,12 +50,22 @@ export const userCreateSchema = createInsertSchema(user, {
 
 export const userUpdateSchema = createInsertSchema(user, {
   id: (schema) => schema.id.optional(),
+  firstName: (schema) => schema.firstName.optional(),
+  lastName: (schema) => schema.lastName.optional(),
+  dob: (schema) => schema.dob.optional(),
+  gender: (schema) => schema.dob.optional(),
   password: (schema) => schema.password.optional(),
   role: (schema) => schema.role.optional(),
   avatar: (schema) => schema.avatar.optional(),
   startedCourses: (schema) => schema.startedCourses.optional(),
   ongoingCourses: (schema) => schema.ongoingCourses.optional(),
   finishedCourse: (schema) => schema.finishedCourse.optional(),
+});
+
+export const userAvatarSchema = z.object({
+  fileName: z.string(),
+  file: z.string().base64(),
+  contentType: z.string(),
 });
 
 export const userPasswordSchema = z.object({
@@ -66,3 +76,4 @@ export const userPasswordSchema = z.object({
 export type UserCreateSchema = z.infer<typeof userCreateSchema>;
 export type UserUpdateSchema = z.infer<typeof userUpdateSchema>;
 export type UserPasswordSchema = z.infer<typeof userPasswordSchema>;
+export type UserAvatarSchema = z.infer<typeof userAvatarSchema>;
