@@ -21,6 +21,7 @@ import {
   getAllFreeCourse,
   getFreeCourseById,
   updateFreeCourse,
+  updateFreeCourseThumbnail,
 } from "../services/courseService";
 
 export const courseRoutes = new Hono();
@@ -39,6 +40,9 @@ courseRoutes.post(
 
       return c.json(new ApiResponse(200, "Free course created successfully"));
     } catch (error) {
+      if (error instanceof BadRequestError) {
+        return c.json(new ApiError(400, error.name, error.message), 400);
+      }
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
@@ -108,6 +112,30 @@ courseRoutes.patch(
     }
   }
 );
+
+/**
+ * PATCH: /courses/free/thumbnail/:id
+ */
+courseRoutes.patch("/free/:id", adminAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const formData = await c.req.formData();
+    const file = formData.get("image") as File;
+
+    const result = await updateFreeCourseThumbnail(id, file);
+
+    return c.json(
+      new ApiResponse(200, "Free course updated successfully", result)
+    );
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
 
 /**
  * DELETE: /courses/free/:id

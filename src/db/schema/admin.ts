@@ -33,9 +33,14 @@ export const adminCreateSchema = createInsertSchema(admin, {
 
 export const adminUpdateSchema = createInsertSchema(admin, {
   id: (schema) => schema.id.optional(),
+  firstName: (schema) => schema.firstName.optional(),
+  lastName: (schema) => schema.lastName.optional(),
+  password: (schema) => schema.password.optional(),
+  dob: (schema) => schema.dob.optional(),
+  gender: (schema) => schema.gender.optional(),
   role: (schema) => schema.role.optional(),
   avatar: (schema) => schema.avatar.optional(),
 });
 
 export type AdminCreateSchema = z.infer<typeof adminCreateSchema>;
-export type adminUpdateSchema = z.infer<typeof adminUpdateSchema>;
+export type AdminUpdateSchema = z.infer<typeof adminUpdateSchema>;

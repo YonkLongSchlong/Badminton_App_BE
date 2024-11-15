@@ -11,6 +11,8 @@ import {
   type PaidCourseCreateSchema,
   type PaidCourseUpdateSchema,
 } from "../db/schema/paid_course";
+import { s3Client } from "../../utils/configAWS";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 /* -------------- PAID COURSE ------------------- */
 export const createPaidCourse = async (data: PaidCourseCreateSchema) => {
@@ -67,6 +69,34 @@ export const updatePaidCourse = async (
     .returning();
 };
 
+export const updatePaidCourseThumbnail = async (id: number, file: File) => {
+  const paidCourseToUpdate = await getPaidCourseById(id);
+  if (paidCourseToUpdate === undefined)
+    throw new NotFoundError(`Course with id ${id} not found`);
+
+  const fileBuffer = await file.arrayBuffer();
+  const base64File = Buffer.from(fileBuffer).toString("base64");
+
+  const uploadParams = {
+    Bucket: Bun.env.S3_COURSE_THUMBNAIL_BUCKET,
+    Key: file.name,
+    Body: Buffer.from(base64File, "base64"),
+    ContentEncoding: "base64",
+    ContentType: file.type,
+  };
+
+  await s3Client.send(new PutObjectCommand(uploadParams));
+  const thumbnailUrl = `https://${uploadParams.Bucket}.s3.${Bun.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+  const [result] = await db
+    .update(paidCourse)
+    .set({ thumbnail: thumbnailUrl })
+    .where(eq(paidCourse.id, id))
+    .returning();
+
+  return result;
+};
+
 export const deletePaidCourse = async (id: number) => {
   const paidCourseToUpdate = await getPaidCourseById(id);
   if (paidCourseToUpdate === undefined)
@@ -109,6 +139,34 @@ export const updateFreeCourse = async (
     .set(data)
     .where(eq(freeCourse.id, id))
     .returning();
+};
+
+export const updateFreeCourseThumbnail = async (id: number, file: File) => {
+  const freeCourseToUpdate = await getFreeCourseById(id);
+  if (freeCourseToUpdate === undefined)
+    throw new NotFoundError(`Course with id ${id} not found`);
+
+  const fileBuffer = await file.arrayBuffer();
+  const base64File = Buffer.from(fileBuffer).toString("base64");
+
+  const uploadParams = {
+    Bucket: Bun.env.S3_COURSE_THUMBNAIL_BUCKET,
+    Key: file.name,
+    Body: Buffer.from(base64File, "base64"),
+    ContentEncoding: "base64",
+    ContentType: file.type,
+  };
+
+  await s3Client.send(new PutObjectCommand(uploadParams));
+  const thumbnailUrl = `https://${uploadParams.Bucket}.s3.${Bun.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+  const [result] = await db
+    .update(freeCourse)
+    .set({ thumbnail: thumbnailUrl })
+    .where(eq(freeCourse.id, id))
+    .returning();
+
+  return result;
 };
 
 export const deleteFreeCourse = async (id: number) => {
