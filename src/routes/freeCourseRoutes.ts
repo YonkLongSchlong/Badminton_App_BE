@@ -18,18 +18,19 @@ import {
   createFreeCourse,
   deleteFreeCourse,
   getAllFreeCourse,
+  getFreeCourseByCategoryId,
   getFreeCourseById,
   updateFreeCourse,
   updateFreeCourseThumbnail,
-} from "../services/courseService";
+} from "../services/freeCourseService";
 
-export const courseRoutes = new Hono();
+export const freeCourseRoutes = new Hono();
 
 /**
- * POST: /courses/free
+ * POST: /free-course
  */
-courseRoutes.post(
-  "/free",
+freeCourseRoutes.post(
+  "",
   adminAuthorization,
   zValidator("json", freeCourseCreateSchema),
   async (c) => {
@@ -50,9 +51,9 @@ courseRoutes.post(
 );
 
 /**
- * GET: /courses/free
+ * GET: /free-course
  */
-courseRoutes.get("/free", allRoleAuthorization, async (c) => {
+freeCourseRoutes.get("", allRoleAuthorization, async (c) => {
   try {
     const result = await getAllFreeCourse();
     return c.json(new ApiResponse(200, `All free course`, result));
@@ -67,9 +68,9 @@ courseRoutes.get("/free", allRoleAuthorization, async (c) => {
 });
 
 /**
- * GET: /courses/free/:id
+ * GET: /free-course/:id
  */
-courseRoutes.get("/free/:id", allRoleAuthorization, async (c) => {
+freeCourseRoutes.get("/:id", allRoleAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const result = await getFreeCourseById(id);
@@ -86,10 +87,29 @@ courseRoutes.get("/free/:id", allRoleAuthorization, async (c) => {
 });
 
 /**
- * PATCH: /courses/free/:id
+ * GET: /free-course/category/:id
  */
-courseRoutes.patch(
-  "/free/:id",
+freeCourseRoutes.get("/:id", allRoleAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const result = await getFreeCourseByCategoryId(id);
+
+    return c.json(result);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * PATCH: /free-course/:id
+ */
+freeCourseRoutes.patch(
+  "/:id",
   adminAuthorization,
   zValidator("json", freeCourseUpdateSchema),
   async (c) => {
@@ -113,9 +133,9 @@ courseRoutes.patch(
 );
 
 /**
- * PATCH: /courses/free/thumbnail/:id
+ * PATCH: /free-course/thumbnail/:id
  */
-courseRoutes.patch("/free/:id", adminAuthorization, async (c) => {
+freeCourseRoutes.patch("/thumbnail/:id", adminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const formData = await c.req.formData();
@@ -137,9 +157,9 @@ courseRoutes.patch("/free/:id", adminAuthorization, async (c) => {
 });
 
 /**
- * DELETE: /courses/free/:id
+ * DELETE: /free-course/:id
  */
-courseRoutes.delete("/free/:id", adminAuthorization, async (c) => {
+freeCourseRoutes.delete("/:id", adminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     await deleteFreeCourse(id);

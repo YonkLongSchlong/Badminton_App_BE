@@ -34,7 +34,6 @@ export const paidLessonCreateSchema = createInsertSchema(paidLesson, {
 export const paidLessonUpdateSchema = createInsertSchema(paidLesson, {
   id: (schema) => schema.id.optional(),
   content: (schema) => schema.content,
-  paidCourseId: (schema) => schema.paidCourseId.optional(),
 });
 
 export const paidLessonSchema = createInsertSchema(paidLesson);

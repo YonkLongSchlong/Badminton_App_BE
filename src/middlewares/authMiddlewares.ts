@@ -11,7 +11,7 @@ export const adminAuthorization = createMiddleware(async (c, next) => {
       message: "You don't have admin permission to continue",
     });
   }
-
+  c.set("adminId", payload.id);
   await next();
 });
 
@@ -22,7 +22,7 @@ export const userAuthorization = createMiddleware(async (c, next) => {
       message: "You don't have permission to continue",
     });
   }
-
+  c.set("userId", payload.id);
   await next();
 });
 
@@ -33,7 +33,7 @@ export const coachAuthorization = createMiddleware(async (c, next) => {
       message: "You don't have coach permission to continue",
     });
   }
-
+  c.set("coachId", payload.id);
   await next();
 });
 
@@ -45,6 +45,11 @@ export const coachAndAdminAuthorization = createMiddleware(async (c, next) => {
     });
   }
 
+  if (payload.role === "coach") {
+    c.set("coachId", payload.id);
+  } else {
+    c.set("adminId", payload.id);
+  }
   await next();
 });
 

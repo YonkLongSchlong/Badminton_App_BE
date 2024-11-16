@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
-import { NotFoundError } from "../../types";
+import { BadRequestError, NotFoundError } from "../../types";
 import {
   paidCourse,
   type PaidCourseCreateSchema,
@@ -8,7 +8,8 @@ import {
 } from "../db/schema/paid_course";
 import { s3Client } from "../../utils/configAWS";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { user_course } from "../db/schema";
+import { review, user_course } from "../db/schema";
+import { check } from "drizzle-orm/mysql-core";
 
 /* -------------- PAID COURSE ------------------- */
 export const createPaidCourse = async (data: PaidCourseCreateSchema) => {
@@ -19,6 +20,7 @@ export const getPaidCourseByCategoryId = async (categoryId: number) => {
   return await db
     .select()
     .from(paidCourse)
+    .innerJoin(review, eq(review.paidCourseId, paidCourse.id))
     .where(eq(paidCourse.categoryId, categoryId));
 };
 
@@ -28,6 +30,7 @@ export const getPaidCourseByStatus = async (
   return await db
     .select()
     .from(paidCourse)
+    .innerJoin(review, eq(review.paidCourseId, paidCourse.id))
     .where(eq(paidCourse.status, status));
 };
 
@@ -35,6 +38,7 @@ export const getPaidCourseByCoachId = async (coachId: number) => {
   return await db
     .select()
     .from(paidCourse)
+    .innerJoin(review, eq(review.paidCourseId, paidCourse.id))
     .where(eq(paidCourse.coachId, coachId));
 };
 
@@ -56,11 +60,12 @@ export const getPaidCourseForUser = async (
   if (check === undefined) {
     result = await db.query.paidCourse.findFirst({
       where: eq(paidCourse.id, course_id),
+      with: { review: true },
     });
   } else {
     result = await db.query.paidCourse.findFirst({
       where: eq(paidCourse.id, course_id),
-      with: { paidLesson: true },
+      with: { paidLesson: true, review: true },
     });
   }
 
@@ -73,7 +78,7 @@ export const getPaidCourseForUser = async (
 export const getPaidCourseById = async (id: number) => {
   const result = await db.query.paidCourse.findFirst({
     where: eq(paidCourse.id, id),
-    with: { paidLesson: true },
+    with: { paidLesson: true, review: true },
   });
 
   if (result === undefined)
@@ -86,9 +91,15 @@ export const updatePaidCourse = async (
   id: number,
   data: PaidCourseUpdateSchema
 ) => {
-  const paidCourseToUpdate = await getPaidCourseById(id);
+  const [paidCourseToUpdate] = await db
+    .select()
+    .from(paidCourse)
+    .where(eq(paidCourse.id, id));
+
   if (paidCourseToUpdate === undefined)
     throw new NotFoundError(`Course with id ${id} not found`);
+
+  await checkCoachPermission(id, data.coachId);
 
   return await db
     .update(paidCourse)
@@ -97,10 +108,12 @@ export const updatePaidCourse = async (
     .returning();
 };
 
-export const updatePaidCourseThumbnail = async (id: number, file: File) => {
-  const paidCourseToUpdate = await getPaidCourseById(id);
-  if (paidCourseToUpdate === undefined)
-    throw new NotFoundError(`Course with id ${id} not found`);
+export const updatePaidCourseThumbnail = async (
+  id: number,
+  file: File,
+  coachId: number
+) => {
+  await checkCoachPermission(id, coachId);
 
   const fileBuffer = await file.arrayBuffer();
   const base64File = Buffer.from(fileBuffer).toString("base64");
@@ -125,10 +138,31 @@ export const updatePaidCourseThumbnail = async (id: number, file: File) => {
   return result;
 };
 
-export const deletePaidCourse = async (id: number) => {
-  const paidCourseToUpdate = await getPaidCourseById(id);
+export const deletePaidCourse = async (id: number, coachId: number) => {
+  const [paidCourseToUpdate] = await db
+    .select()
+    .from(paidCourse)
+    .where(eq(paidCourse.id, id));
+
   if (paidCourseToUpdate === undefined)
     throw new NotFoundError(`Course with id ${id} not found`);
 
+  await checkCoachPermission(id, coachId);
+
   await db.delete(paidCourse).where(eq(paidCourse.id, id));
+};
+
+export const checkCoachPermission = async (
+  courseId: number,
+  coachId: number
+) => {
+  const checkCoach = await db.query.paidCourse.findFirst({
+    where: and(eq(paidCourse.coachId, coachId), eq(paidCourse.id, courseId)),
+  });
+
+  if (checkCoach === undefined) {
+    throw new BadRequestError(
+      "You don't have permission to modify this course"
+    );
+  }
 };

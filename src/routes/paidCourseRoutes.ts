@@ -10,6 +10,7 @@ import {
   ApiResponse,
   BadRequestError,
   NotFoundError,
+  type Variables,
 } from "../../types";
 import {
   paidCourseCreateSchema,
@@ -18,14 +19,15 @@ import {
 import {
   createPaidCourse,
   deletePaidCourse,
+  getPaidCourseByCategoryId,
   getPaidCourseById,
   getPaidCourseForUser,
   updatePaidCourse,
   updatePaidCourseThumbnail,
 } from "../services/paidCourseService";
-import { getAllFreeCourse } from "../services/courseService";
+import { getAllFreeCourse } from "../services/freeCourseService";
 
-export const paidCourseRoutes = new Hono();
+export const paidCourseRoutes = new Hono<{ Variables: Variables }>();
 
 /**
  * POST: /paid-courses
@@ -88,28 +90,43 @@ paidCourseRoutes.get("/:id", coachAndAdminAuthorization, async (c) => {
 });
 
 /**
- * GET: /paid-courses/:course_id/user/:user_id
+ * GET: /paid-courses/category/:id
  */
-paidCourseRoutes.get(
-  "/:course_id/user/:user_id",
-  userAuthorization,
-  async (c) => {
-    try {
-      const course_id = Number.parseInt(c.req.param("course_id"));
-      const user_id = Number.parseInt(c.req.param("user_id"));
-      const result = await getPaidCourseForUser(course_id, user_id);
+paidCourseRoutes.get("/category/:id", allRoleAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const result = await getPaidCourseByCategoryId(id);
 
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        return c.json(new ApiError(404, error.name, error.message), 404);
-      }
-      if (error instanceof Error) {
-        return c.json(new ApiError(500, error.name, error.message), 500);
-      }
+    return c.json(result);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
-);
+});
+
+/**
+ * GET: /paid-courses/:course_id/user
+ */
+paidCourseRoutes.get("/:course_id/user", userAuthorization, async (c) => {
+  try {
+    const course_id = Number.parseInt(c.req.param("course_id"));
+    const userId = c.get("userId");
+    const result = await getPaidCourseForUser(course_id, userId);
+
+    return c.json(result);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
 
 /**
  * PATCH: /paid-courses/:id
@@ -139,18 +156,19 @@ paidCourseRoutes.patch(
 );
 
 /**
- * PATCH: /paid-courses/thumbnail/:id
+ * PATCH: /paid-courses/:id/thumbnail/
  */
 paidCourseRoutes.patch(
-  "/thumbnail/:id",
+  "/:id/thumbnail/:coach_id",
   coachAndAdminAuthorization,
   async (c) => {
     try {
       const id = Number.parseInt(c.req.param("id"));
+      const coachId = c.get("coachId");
       const formData = await c.req.formData();
       const file = formData.get("image") as File;
 
-      const result = await updatePaidCourseThumbnail(id, file);
+      const result = await updatePaidCourseThumbnail(id, file, coachId);
 
       return c.json(
         new ApiResponse(200, "Paid course updated successfully", result)
@@ -169,18 +187,23 @@ paidCourseRoutes.patch(
 /**
  * DELETE: /paid-courses/:id
  */
-paidCourseRoutes.delete("/:id", coachAndAdminAuthorization, async (c) => {
-  try {
-    const id = Number.parseInt(c.req.param("id"));
-    await deletePaidCourse(id);
+paidCourseRoutes.delete(
+  "/:id/:coach_id",
+  coachAndAdminAuthorization,
+  async (c) => {
+    try {
+      const id = Number.parseInt(c.req.param("id"));
+      const coachId = c.get("coachId");
+      await deletePaidCourse(id, coachId);
 
-    return c.json(new ApiResponse(200, "Paid course deleted successfully"));
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      return c.json(new ApiError(404, error.name, error.message), 404);
-    }
-    if (error instanceof Error) {
-      return c.json(new ApiError(500, error.name, error.message), 500);
+      return c.json(new ApiResponse(200, "Paid course deleted successfully"));
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return c.json(new ApiError(404, error.name, error.message), 404);
+      }
+      if (error instanceof Error) {
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
     }
   }
-});
+);

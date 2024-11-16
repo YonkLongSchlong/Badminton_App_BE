@@ -10,3 +10,4 @@ export { courseType } from "./course";
 export { courseStatus } from "./paid_course";
 export { freeLesson, freeLessonRelations } from "./free_lesson";
 export { paidLesson, paidLessonRelations } from "./paid_lesson";
+export { review, reviewRelations } from "./review";

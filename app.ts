@@ -5,12 +5,13 @@ import { userRoutes } from "./src/routes/userRoutes";
 import { adminRoutes } from "./src/routes/adminRoutes";
 import { authRoute } from "./src/routes/authRoutes";
 import { coachRoutes } from "./src/routes/coachRoutes";
-import { courseRoutes } from "./src/routes/courseRoutes";
+import { freeCourseRoutes } from "./src/routes/freeCourseRoutes";
 import { categoryRoutes } from "./src/routes/categoryRoutes";
 import { lessonRoute } from "./src/routes/lessonRoutes";
 import { paidCourseRoutes } from "./src/routes/paidCourseRoutes";
 import { Route53 } from "aws-sdk";
 import { orderRoutes } from "./src/routes/orderRoutes";
+import type { Variables } from "./types";
 
 const app = new Hono().basePath("/api/v1");
 
@@ -21,7 +22,7 @@ app
   .route("/coaches", coachRoutes)
   .route("/admin", adminRoutes)
   .route("/auth", authRoute)
-  .route("/courses", courseRoutes)
+  .route("/free-courses", freeCourseRoutes)
   .route("/lessons", lessonRoute)
   .route("/categories", categoryRoutes)
   .route("/paid-courses", paidCourseRoutes)

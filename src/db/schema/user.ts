@@ -12,6 +12,7 @@ import { user_course } from "./user_course";
 import { order } from "./order";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { review } from "./review";
 
 export const roleEnum = pgEnum("role", ["admin", "user", "coach"]);
 
@@ -35,6 +36,7 @@ export const user = pgTable("user", {
 export const userRelations = relations(user, ({ many }) => ({
   userPaidCourse: many(user_course),
   order: many(order),
+  review: many(review),
 }));
 
 export const userCreateSchema = createInsertSchema(user, {

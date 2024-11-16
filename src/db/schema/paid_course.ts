@@ -7,6 +7,7 @@ import { createInsertSchema } from "drizzle-zod";
 import type { z } from "zod";
 import { courses } from "./course";
 import { paidLesson } from "./paid_lesson";
+import { review } from "./review";
 
 export const courseStatus = pgEnum("status", ["publish", "non-publish"]);
 
@@ -16,6 +17,7 @@ export const paidCourse = pgTable("paid_course", {
   lessonQuantity: integer("lesson_quantity").default(0),
   studentQuantity: integer("student_quantity").default(0),
   status: courseStatus("status"),
+  star: integer("start").default(5),
   coachId: integer("coach_id")
     .references(() => coach.id)
     .notNull(),
@@ -27,6 +29,7 @@ export const paidCourse = pgTable("paid_course", {
 export const paidCourseRelations = relations(paidCourse, ({ one, many }) => ({
   user_course: many(user_course),
   paidLesson: many(paidLesson),
+  review: many(review),
   category: one(category, {
     fields: [paidCourse.categoryId],
     references: [category.id],
@@ -36,6 +39,7 @@ export const paidCourseRelations = relations(paidCourse, ({ one, many }) => ({
 
 export const paidCourseCreateSchema = createInsertSchema(paidCourse, {
   id: (schema) => schema.id.optional(),
+  star: (schema) => schema.star.optional(),
   lessonQuantity: (schema) => schema.lessonQuantity.optional(),
   studentQuantity: (schema) => schema.studentQuantity.optional(),
 });
@@ -50,7 +54,7 @@ export const paidCourseUpdateSchema = createInsertSchema(paidCourse, {
   studentQuantity: (schema) => schema.studentQuantity.optional(),
   lessonQuantity: (schema) => schema.lessonQuantity.optional(),
   price: (schema) => schema.price.optional(),
-  coachId: (schema) => schema.coachId.optional(),
+  star: (schema) => schema.star.optional(),
   categoryId: (schema) => schema.categoryId.optional(),
 });
 

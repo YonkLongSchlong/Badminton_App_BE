@@ -1,3 +1,5 @@
+import { Hono } from "hono";
+
 export class ApiResponse {
   private status: number;
   private msg?: string;
@@ -33,3 +35,9 @@ export class NotFoundError extends Error {
     super(message);
   }
 }
+
+export type Variables = {
+  userId: number;
+  coachId: number;
+  adminId: number;
+};

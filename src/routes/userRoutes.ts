@@ -8,7 +8,6 @@ import {
   updateUserPassword,
 } from "../services/userService";
 import {
-  userAvatarSchema,
   userCreateSchema,
   userPasswordSchema,
   userUpdateSchema,
@@ -78,7 +77,9 @@ userRoutes.patch(
       const data = c.req.valid("json");
       const result = await updateUser(id, data);
 
-      return c.json(new ApiResponse(200, "Profile updated successfully", result));
+      return c.json(
+        new ApiResponse(200, "Profile updated successfully", result)
+      );
     } catch (error) {
       if (error instanceof BadRequestError) {
         return c.json(new ApiError(400, error.name, error.message), 400);
@@ -96,32 +97,28 @@ userRoutes.patch(
 /**
  * PATCH: /users/avatar/:id
  */
-userRoutes.patch(
-  "/avatar/:id",
-  userAuthorization,
-  async (c) => {
-    try {
-     const id = Number.parseInt(c.req.param("id"));
-     const formData = await c.req.formData();
-     const file = formData.get("image") as File;
+userRoutes.patch("/avatar/:id", userAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const formData = await c.req.formData();
+    const file = formData.get("image") as File;
 
-      const result = await updateUserAvatar(id, file);
+    const result = await updateUserAvatar(id, file);
 
-      return c.json(new ApiResponse(200, "Avatar updated successfully", result));
-    } catch (error) {
-      if (error instanceof BadRequestError) {
-        return c.json(new ApiError(400, error.name, error.message), 400);
-      }
-      if (error instanceof NotFoundError) {
-        return c.json(new ApiError(404, error.name, error.message), 404);
-      }
-      if (error instanceof Error) {
-        console.log(error.message);
-        return c.json(new ApiError(500, error.name, error.message), 500);
-      }
+    return c.json(new ApiResponse(200, "Avatar updated successfully", result));
+  } catch (error) {
+    if (error instanceof BadRequestError) {
+      return c.json(new ApiError(400, error.name, error.message), 400);
+    }
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      console.log(error.message);
+      return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
-);
+});
 
 /**
  * PATCH: /users/:id/password

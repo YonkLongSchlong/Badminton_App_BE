@@ -8,6 +8,7 @@ import {
 import { NotFoundError } from "../../types";
 import { s3Client } from "../../utils/configAWS";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { category } from "../db/schema";
 
 /* -------------- FREE COURSE ------------------- */
 export const createFreeCourse = async (data: FreeCourseCreateSchema) => {
@@ -18,10 +19,17 @@ export const getAllFreeCourse = async () => {
   return await db.select().from(freeCourse);
 };
 
+export const getFreeCourseByCategoryId = async (id: number) => {
+  return await db
+    .select()
+    .from(freeCourse)
+    .where(eq(freeCourse.categoryId, id));
+};
+
 export const getFreeCourseById = async (id: number) => {
   const result = await db.query.freeCourse.findFirst({
     where: eq(freeCourse.id, id),
-    with: { freeLesson: true },
+    with: { freeLesson: true, category: true },
   });
 
   if (result === undefined)

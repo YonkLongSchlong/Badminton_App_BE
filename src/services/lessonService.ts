@@ -1,18 +1,18 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db";
-import { NotFoundError } from "../../types";
+import { BadRequestError, NotFoundError } from "../../types";
 import {
   freeLesson,
   type FreeLessonCreateSchema,
   type FreeLessonUpdateSchema,
 } from "../db/schema/free_lesson";
 import { freeCourse, paidCourse } from "../db/schema";
-import { getFreeCourseById } from "./courseService";
+import { getFreeCourseById } from "./freeCourseService";
 import {
   paidLesson,
   type PaidLessonCreateSchema,
+  type PaidLessonUpdateSchema,
 } from "../db/schema/paid_lesson";
-import type { PaidCourseUpdateSchema } from "../db/schema/paid_course";
 import { s3Client } from "../../utils/configAWS";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getPaidCourseById } from "./paidCourseService";
@@ -105,8 +105,14 @@ export const getFreeLessonById = async (id: number) => {
 };
 
 /* -------------- PAID LESSON ------------------- */
-export const uploadImagePaidLesson = async (file: File) => {
+export const uploadImagePaidLesson = async (
+  id: number,
+  file: File,
+  coachId: number
+) => {
   try {
+    await checkCoachPermission(id, coachId);
+
     const fileBuffer = await file.arrayBuffer();
     const base64File = Buffer.from(fileBuffer).toString("base64");
 
@@ -148,11 +154,14 @@ export const createPaidLesson = async (data: PaidLessonCreateSchema) => {
 
 export const updatePaidLesson = async (
   id: number,
-  data: PaidCourseUpdateSchema
+  coachId: number,
+  data: PaidLessonUpdateSchema
 ) => {
   const paidLessonToUpdate = await getPaidLessonById(id);
   if (paidLessonToUpdate === undefined)
     throw new NotFoundError(`Lesson with id ${id} not found`);
+
+  await checkCoachPermission(paidLessonToUpdate.paidCourseId, coachId);
 
   return await db
     .update(paidLesson)
@@ -161,13 +170,15 @@ export const updatePaidLesson = async (
     .returning();
 };
 
-export const deletePaidLesson = async (id: number) => {
+export const deletePaidLesson = async (id: number, coachId: number) => {
   const paidLessonToDelete = await getPaidLessonById(id);
   if (paidLessonToDelete === undefined)
     throw new NotFoundError(`Lesson with id ${id} not found`);
 
+  await checkCoachPermission(paidLessonToDelete.paidCourseId, coachId);
+
   const paidCourseToUpdate = await getPaidCourseById(
-    paidLessonToDelete.paidCourseId!
+    paidLessonToDelete.paidCourseId
   );
   if (paidCourseToUpdate === undefined)
     throw new NotFoundError(
@@ -189,4 +200,17 @@ export const deletePaidLesson = async (id: number) => {
 
 export const getPaidLessonById = async (id: number) => {
   return await db.query.paidLesson.findFirst({ where: eq(paidLesson.id, id) });
+};
+
+/* -------------- PRIVATE ------------------- */
+const checkCoachPermission = async (courseId: number, coachId: number) => {
+  const checkCoach = await db.query.paidCourse.findFirst({
+    where: and(eq(paidCourse.coachId, coachId), eq(paidCourse.id, courseId)),
+  });
+
+  if (checkCoach === undefined) {
+    throw new BadRequestError(
+      "You don't have permission to modify this lesson"
+    );
+  }
 };
