@@ -3,7 +3,6 @@ import { Hono } from "hono";
 import {
   adminAuthorization,
   allRoleAuthorization,
-  coachAndAdminAuthorization,
 } from "../middlewares/authMiddlewares";
 import {
   freeCourseCreateSchema,

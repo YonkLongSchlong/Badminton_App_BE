@@ -13,8 +13,8 @@ export const courseStatus = pgEnum("status", ["publish", "non-publish"]);
 export const paidCourse = pgTable("paid_course", {
   ...courses,
   price: decimal("price"),
-  lessonQuantity: integer("lesson_quantity"),
-  studentQuantity: integer("student_quantity"),
+  lessonQuantity: integer("lesson_quantity").default(0),
+  studentQuantity: integer("student_quantity").default(0),
   status: courseStatus("status"),
   coachId: integer("coach_id")
     .references(() => coach.id)

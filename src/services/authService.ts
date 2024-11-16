@@ -60,6 +60,7 @@ export const authenticateLoginOtp = async (data: OtpSchema) => {
   }
 
   const payload = {
+    id: data.id,
     email: data.email,
     role: data.role,
     exp: Math.floor(Date.now() / 1000) + 60 * 260,
@@ -73,13 +74,13 @@ export const authenticateLoginOtp = async (data: OtpSchema) => {
   let result = null;
   switch (data.role) {
     case "user":
-      result = await getUserByEmail( data.email)
+      result = await getUserByEmail(data.email);
       break;
     case "coach":
-      result = await getCoachByEmail(data.email)
+      result = await getCoachByEmail(data.email);
       break;
     default:
-      result = await getAdminByEmail( data.email )
+      result = await getAdminByEmail(data.email);
   }
 
   return { token: promise[0], user: result };

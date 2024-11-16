@@ -7,7 +7,7 @@ import {
   type FreeLessonUpdateSchema,
 } from "../db/schema/free_lesson";
 import { freeCourse, paidCourse } from "../db/schema";
-import { getFreeCourseById, getPaidCourseById } from "./courseService";
+import { getFreeCourseById } from "./courseService";
 import {
   paidLesson,
   type PaidLessonCreateSchema,
@@ -15,6 +15,7 @@ import {
 import type { PaidCourseUpdateSchema } from "../db/schema/paid_course";
 import { s3Client } from "../../utils/configAWS";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getPaidCourseById } from "./paidCourseService";
 
 /* -------------- FREE LESSON ------------------- */
 export const uploadImageFreeLesson = async (file: File) => {

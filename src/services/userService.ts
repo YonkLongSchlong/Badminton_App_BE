@@ -1,7 +1,6 @@
 import { db } from "../db";
 import {
   user,
-  type UserAvatarSchema,
   type UserCreateSchema,
   type UserPasswordSchema,
   type UserUpdateSchema,
@@ -12,6 +11,7 @@ import { hashPassword } from "../../utils/authenticateUtils";
 import { BadRequestError, NotFoundError } from "../../types";
 import { s3Client } from "../../utils/configAWS";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { paidCourse, user_course } from "../db/schema";
 
 export const createUser = async (data: UserCreateSchema) => {
   const checkUserEmail = await getUserByEmail(data.email);
@@ -55,8 +55,8 @@ export const updateUserAvatar = async (id: number, file: File) => {
   if (userToUpdate === undefined)
     throw new NotFoundError(`User with id ${id} not found`);
 
-   const fileBuffer = await file.arrayBuffer();
-   const base64File = Buffer.from(fileBuffer).toString("base64");
+  const fileBuffer = await file.arrayBuffer();
+  const base64File = Buffer.from(fileBuffer).toString("base64");
 
   const uploadParams = {
     Bucket: Bun.env.S3_AVATAR_BUCKET,
@@ -76,7 +76,7 @@ export const updateUserAvatar = async (id: number, file: File) => {
     .returning();
 
   return result;
-}
+};
 
 export const updateUserPassword = async (
   id: number,
@@ -95,6 +95,14 @@ export const updateUserPassword = async (
 
 export const getUserByEmail = async (email: string) => {
   return await db.query.user.findFirst({ where: eq(user.email, email) });
+};
+
+export const getAllPaidCoursesUserEnrolled = async (id: number) => {
+  return await db
+    .select()
+    .from(user_course)
+    .where(eq(user_course.user_id, id))
+    .innerJoin(paidCourse, eq(user_course.paid_course_id, paidCourse.id));
 };
 
 /* ------------------- PRIVATE METHOD -------------------  */

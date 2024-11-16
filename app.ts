@@ -8,6 +8,9 @@ import { coachRoutes } from "./src/routes/coachRoutes";
 import { courseRoutes } from "./src/routes/courseRoutes";
 import { categoryRoutes } from "./src/routes/categoryRoutes";
 import { lessonRoute } from "./src/routes/lessonRoutes";
+import { paidCourseRoutes } from "./src/routes/paidCourseRoutes";
+import { Route53 } from "aws-sdk";
+import { orderRoutes } from "./src/routes/orderRoutes";
 
 const app = new Hono().basePath("/api/v1");
 
@@ -20,6 +23,8 @@ app
   .route("/auth", authRoute)
   .route("/courses", courseRoutes)
   .route("/lessons", lessonRoute)
-  .route("/categories", categoryRoutes);
+  .route("/categories", categoryRoutes)
+  .route("/paid-courses", paidCourseRoutes)
+  .route("/order", orderRoutes);
 
 export default app;

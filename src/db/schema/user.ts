@@ -62,12 +62,6 @@ export const userUpdateSchema = createInsertSchema(user, {
   finishedCourse: (schema) => schema.finishedCourse.optional(),
 });
 
-export const userAvatarSchema = z.object({
-  fileName: z.string(),
-  file: z.string().base64(),
-  contentType: z.string(),
-});
-
 export const userPasswordSchema = z.object({
   password: z.string(),
   newPassword: z.string(),
@@ -76,4 +70,3 @@ export const userPasswordSchema = z.object({
 export type UserCreateSchema = z.infer<typeof userCreateSchema>;
 export type UserUpdateSchema = z.infer<typeof userUpdateSchema>;
 export type UserPasswordSchema = z.infer<typeof userPasswordSchema>;
-export type UserAvatarSchema = z.infer<typeof userAvatarSchema>;
