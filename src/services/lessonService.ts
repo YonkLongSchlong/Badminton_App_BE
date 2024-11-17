@@ -6,7 +6,7 @@ import {
   type FreeLessonCreateSchema,
   type FreeLessonUpdateSchema,
 } from "../db/schema/free_lesson";
-import { freeCourse, paidCourse } from "../db/schema";
+import { freeCourse, paidCourse, user, user_course } from "../db/schema";
 import { getFreeCourseById } from "./freeCourseService";
 import {
   paidLesson,
@@ -111,7 +111,7 @@ export const uploadImagePaidLesson = async (
   coachId: number
 ) => {
   try {
-    await checkCoachPermission(id, coachId);
+    await getPaidLessonById(id, coachId);
 
     const fileBuffer = await file.arrayBuffer();
     const base64File = Buffer.from(fileBuffer).toString("base64");
@@ -157,11 +157,7 @@ export const updatePaidLesson = async (
   coachId: number,
   data: PaidLessonUpdateSchema
 ) => {
-  const paidLessonToUpdate = await getPaidLessonById(id);
-  if (paidLessonToUpdate === undefined)
-    throw new NotFoundError(`Lesson with id ${id} not found`);
-
-  await checkCoachPermission(paidLessonToUpdate.paidCourseId, coachId);
+  await getPaidLessonById(id, coachId);
 
   return await db
     .update(paidLesson)
@@ -171,11 +167,7 @@ export const updatePaidLesson = async (
 };
 
 export const deletePaidLesson = async (id: number, coachId: number) => {
-  const paidLessonToDelete = await getPaidLessonById(id);
-  if (paidLessonToDelete === undefined)
-    throw new NotFoundError(`Lesson with id ${id} not found`);
-
-  await checkCoachPermission(paidLessonToDelete.paidCourseId, coachId);
+  const paidLessonToDelete = await getPaidLessonById(id, coachId);
 
   const paidCourseToUpdate = await getPaidCourseById(
     paidLessonToDelete.paidCourseId
@@ -198,19 +190,55 @@ export const deletePaidLesson = async (id: number, coachId: number) => {
   }
 };
 
-export const getPaidLessonById = async (id: number) => {
-  return await db.query.paidLesson.findFirst({ where: eq(paidLesson.id, id) });
+export const getPaidLessonById = async (id: number, coachId: number) => {
+  const result = await db.query.paidLesson.findFirst({
+    where: eq(paidLesson.id, id),
+  });
+
+  if (result === undefined)
+    throw new NotFoundError(`Lesson with id ${id} not found`);
+
+  await checkCoachPermission(result.paidCourseId, coachId);
+  return result;
+};
+
+export const getPaidLessonForUser = async (id: number, userId: number) => {
+  const result = await db.query.paidLesson.findFirst({
+    where: eq(paidLesson.id, id),
+  });
+
+  if (result === undefined) {
+    throw new NotFoundError(`Lesson with id ${id} not found`);
+  }
+
+  await checkUserPermission(result.paidCourseId, userId);
+
+  return result;
 };
 
 /* -------------- PRIVATE ------------------- */
 const checkCoachPermission = async (courseId: number, coachId: number) => {
   const checkCoach = await db.query.paidCourse.findFirst({
-    where: and(eq(paidCourse.coachId, coachId), eq(paidCourse.id, courseId)),
+    where: and(eq(paidCourse.id, courseId), eq(paidCourse.coachId, coachId)),
   });
 
   if (checkCoach === undefined) {
     throw new BadRequestError(
       "You don't have permission to modify this lesson"
+    );
+  }
+};
+
+const checkUserPermission = async (courseId: number, userId: number) => {
+  const [checkUser] = await db
+    .select()
+    .from(user_course)
+    .where(eq(user_course.paid_course_id, courseId))
+    .innerJoin(user_course, eq(user.id, userId));
+
+  if (checkUser === undefined) {
+    throw new BadRequestError(
+      "You don't have permission to access this lesson"
     );
   }
 };
