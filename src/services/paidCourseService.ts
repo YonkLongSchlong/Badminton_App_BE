@@ -16,6 +16,10 @@ export const createPaidCourse = async (data: PaidCourseCreateSchema) => {
   return await db.insert(paidCourse).values(data);
 };
 
+export const getAllPaidCourse = async () => {
+  return await db.select().from(paidCourse);
+};
+
 export const getPaidCourseByCategoryId = async (categoryId: number) => {
   return await db
     .select()
@@ -99,7 +103,7 @@ export const updatePaidCourse = async (
   if (paidCourseToUpdate === undefined)
     throw new NotFoundError(`Course with id ${id} not found`);
 
-  await checkCoachPermission(id, data.coachId);
+  // await checkCoachPermission(id, data.coachId);
 
   return await db
     .update(paidCourse)
@@ -113,7 +117,7 @@ export const updatePaidCourseThumbnail = async (
   file: File,
   coachId: number
 ) => {
-  await checkCoachPermission(id, coachId);
+  // await checkCoachPermission(id, coachId);
 
   const fileBuffer = await file.arrayBuffer();
   const base64File = Buffer.from(fileBuffer).toString("base64");
@@ -147,7 +151,7 @@ export const deletePaidCourse = async (id: number, coachId: number) => {
   if (paidCourseToUpdate === undefined)
     throw new NotFoundError(`Course with id ${id} not found`);
 
-  await checkCoachPermission(id, coachId);
+  // await checkCoachPermission(id, coachId);
 
   await db.delete(paidCourse).where(eq(paidCourse.id, id));
 };

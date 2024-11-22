@@ -26,7 +26,6 @@ const loginSchema = z.object({
 });
 
 const otpSchema = z.object({
-  id: z.number(),
   otp: z.string(),
   role: z.string(),
   email: z.string().email(),

@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import {
   adminAuthorization,
   allRoleAuthorization,
+  coachAndAdminAuthorization,
 } from "../middlewares/authMiddlewares";
 import {
   freeCourseCreateSchema,
@@ -31,7 +32,7 @@ export const freeCourseRoutes = new Hono();
  */
 freeCourseRoutes.post(
   "",
-  adminAuthorization,
+  coachAndAdminAuthorization,
   zValidator("json", freeCourseCreateSchema),
   async (c) => {
     try {
@@ -110,7 +111,7 @@ freeCourseRoutes.get("/:id", allRoleAuthorization, async (c) => {
  */
 freeCourseRoutes.patch(
   "/:id",
-  adminAuthorization,
+  coachAndAdminAuthorization,
   zValidator("json", freeCourseUpdateSchema),
   async (c) => {
     try {
@@ -135,7 +136,7 @@ freeCourseRoutes.patch(
 /**
  * PATCH: /free-course/thumbnail/:id
  */
-freeCourseRoutes.patch("/thumbnail/:id", adminAuthorization, async (c) => {
+freeCourseRoutes.patch("/thumbnail/:id", coachAndAdminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const formData = await c.req.formData();
@@ -159,7 +160,7 @@ freeCourseRoutes.patch("/thumbnail/:id", adminAuthorization, async (c) => {
 /**
  * DELETE: /free-course/:id
  */
-freeCourseRoutes.delete("/:id", adminAuthorization, async (c) => {
+freeCourseRoutes.delete("/:id", coachAndAdminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     await deleteFreeCourse(id);

@@ -1,8 +1,10 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import {
+  adminAuthorization,
   allRoleAuthorization,
   coachAndAdminAuthorization,
+  coachAuthorization,
   userAuthorization,
 } from "../middlewares/authMiddlewares";
 import {
@@ -19,13 +21,15 @@ import {
 import {
   createPaidCourse,
   deletePaidCourse,
+  getAllPaidCourse,
   getPaidCourseByCategoryId,
+  getPaidCourseByCoachId,
   getPaidCourseById,
   getPaidCourseForUser,
   updatePaidCourse,
   updatePaidCourseThumbnail,
 } from "../services/paidCourseService";
-import { getAllFreeCourse } from "../services/freeCourseService";
+import { coach } from "../db/schema";
 
 export const paidCourseRoutes = new Hono<{ Variables: Variables }>();
 
@@ -58,7 +62,7 @@ paidCourseRoutes.post(
  */
 paidCourseRoutes.get("", allRoleAuthorization, async (c) => {
   try {
-    const result = await getAllFreeCourse();
+    const result = await getAllPaidCourse();
     return c.json(new ApiResponse(200, `All free course`, result));
   } catch (error) {
     if (error instanceof NotFoundError) {
@@ -96,6 +100,25 @@ paidCourseRoutes.get("/category/:id", allRoleAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const result = await getPaidCourseByCategoryId(id);
+
+    return c.json(result);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * GET: /paid-courses/coach/:id
+ */
+paidCourseRoutes.get("/coach/:id", coachAndAdminAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const result = await getPaidCourseByCoachId(id);
 
     return c.json(result);
   } catch (error) {

@@ -52,10 +52,11 @@ export const createFreeLesson = async (data: FreeLessonCreateSchema) => {
       await tx.insert(freeLesson).values(data).returning();
       await tx
         .update(freeCourse)
-        .set({ lessonQuantity: freeCourseToUpdate.lessonQuantity! + 1 });
+        .set({ lessonQuantity: freeCourseToUpdate.lessonQuantity! + 1 })
+        .where(eq(freeCourse.id, data.freeCourseId)); 
     });
   } catch (error) {
-    throw new Error("Failed to added new lesson");
+    throw new Error("Failed to add new lesson");
   }
 };
 
