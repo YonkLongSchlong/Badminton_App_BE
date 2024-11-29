@@ -38,7 +38,7 @@ export const paidCourseRoutes = new Hono<{ Variables: Variables }>();
  */
 paidCourseRoutes.post(
   "",
-  coachAndAdminAuthorization,
+  coachAuthorization,
   zValidator("json", paidCourseCreateSchema),
   async (c) => {
     try {
@@ -63,7 +63,7 @@ paidCourseRoutes.post(
 paidCourseRoutes.get("", allRoleAuthorization, async (c) => {
   try {
     const result = await getAllPaidCourse();
-    return c.json(new ApiResponse(200, `All free course`, result));
+    return c.json(new ApiResponse(200, `All paid course`, result));
   } catch (error) {
     if (error instanceof NotFoundError) {
       return c.json(new ApiError(404, error.name, error.message), 404);
@@ -156,7 +156,7 @@ paidCourseRoutes.get("/:course_id/user", userAuthorization, async (c) => {
  */
 paidCourseRoutes.patch(
   "/:id",
-  coachAndAdminAuthorization,
+  coachAuthorization,
   zValidator("json", paidCourseUpdateSchema),
   async (c) => {
     try {
@@ -179,19 +179,18 @@ paidCourseRoutes.patch(
 );
 
 /**
- * PATCH: /paid-courses/:id/thumbnail/
+ * PATCH: /paid-courses/thumbnail/:id
  */
 paidCourseRoutes.patch(
-  "/:id/thumbnail/:coach_id",
-  coachAndAdminAuthorization,
+  "/thumbnail/:id",
+  coachAuthorization,
   async (c) => {
     try {
       const id = Number.parseInt(c.req.param("id"));
-      const coachId = c.get("coachId");
       const formData = await c.req.formData();
       const file = formData.get("image") as File;
 
-      const result = await updatePaidCourseThumbnail(id, file, coachId);
+      const result = await updatePaidCourseThumbnail(id, file);
 
       return c.json(
         new ApiResponse(200, "Paid course updated successfully", result)
@@ -211,13 +210,12 @@ paidCourseRoutes.patch(
  * DELETE: /paid-courses/:id
  */
 paidCourseRoutes.delete(
-  "/:id/:coach_id",
-  coachAndAdminAuthorization,
+  "/:id",
+  coachAuthorization,
   async (c) => {
     try {
       const id = Number.parseInt(c.req.param("id"));
-      const coachId = c.get("coachId");
-      await deletePaidCourse(id, coachId);
+      await deletePaidCourse(id);
 
       return c.json(new ApiResponse(200, "Paid course deleted successfully"));
     } catch (error) {

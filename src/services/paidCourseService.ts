@@ -42,7 +42,7 @@ export const getPaidCourseByCoachId = async (coachId: number) => {
   return await db
     .select()
     .from(paidCourse)
-    .innerJoin(review, eq(review.paidCourseId, paidCourse.id))
+    .leftJoin(review, eq(review.paidCourseId, paidCourse.id))
     .where(eq(paidCourse.coachId, coachId));
 };
 
@@ -115,9 +115,7 @@ export const updatePaidCourse = async (
 export const updatePaidCourseThumbnail = async (
   id: number,
   file: File,
-  coachId: number
 ) => {
-  // await checkCoachPermission(id, coachId);
 
   const fileBuffer = await file.arrayBuffer();
   const base64File = Buffer.from(fileBuffer).toString("base64");
@@ -142,7 +140,7 @@ export const updatePaidCourseThumbnail = async (
   return result;
 };
 
-export const deletePaidCourse = async (id: number, coachId: number) => {
+export const deletePaidCourse = async (id: number) => {
   const [paidCourseToUpdate] = await db
     .select()
     .from(paidCourse)

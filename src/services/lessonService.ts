@@ -109,10 +109,9 @@ export const getFreeLessonById = async (id: number) => {
 export const uploadImagePaidLesson = async (
   id: number,
   file: File,
-  coachId: number
 ) => {
   try {
-    await getPaidLessonById(id, coachId);
+    await getPaidLessonById(id);
 
     const fileBuffer = await file.arrayBuffer();
     const base64File = Buffer.from(fileBuffer).toString("base64");
@@ -146,7 +145,8 @@ export const createPaidLesson = async (data: PaidLessonCreateSchema) => {
       await tx.insert(paidLesson).values(data).returning();
       await tx
         .update(paidCourse)
-        .set({ lessonQuantity: paidCourseToUpdate.lessonQuantity! + 1 });
+        .set({ lessonQuantity: paidCourseToUpdate.lessonQuantity! + 1 })
+        .where(eq(paidCourse.id, data.paidCourseId)); 
     });
   } catch (error) {
     throw new Error("Failed to added new lesson");
@@ -155,10 +155,9 @@ export const createPaidLesson = async (data: PaidLessonCreateSchema) => {
 
 export const updatePaidLesson = async (
   id: number,
-  coachId: number,
   data: PaidLessonUpdateSchema
 ) => {
-  await getPaidLessonById(id, coachId);
+  await getPaidLessonById(id);
 
   return await db
     .update(paidLesson)
@@ -167,8 +166,8 @@ export const updatePaidLesson = async (
     .returning();
 };
 
-export const deletePaidLesson = async (id: number, coachId: number) => {
-  const paidLessonToDelete = await getPaidLessonById(id, coachId);
+export const deletePaidLesson = async (id: number) => {
+  const paidLessonToDelete = await getPaidLessonById(id);
 
   const paidCourseToUpdate = await getPaidCourseById(
     paidLessonToDelete.paidCourseId
@@ -191,15 +190,13 @@ export const deletePaidLesson = async (id: number, coachId: number) => {
   }
 };
 
-export const getPaidLessonById = async (id: number, coachId: number) => {
+export const getPaidLessonById = async (id: number) => {
   const result = await db.query.paidLesson.findFirst({
     where: eq(paidLesson.id, id),
   });
 
   if (result === undefined)
     throw new NotFoundError(`Lesson with id ${id} not found`);
-
-  await checkCoachPermission(result.paidCourseId, coachId);
   return result;
 };
 
