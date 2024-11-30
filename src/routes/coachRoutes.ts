@@ -18,7 +18,11 @@ import {
   BadRequestError,
   NotFoundError,
 } from "../../types";
-import { coachAuthorization } from "../middlewares/authMiddlewares";
+import {
+  allRoleAuthorization,
+  coachAuthorization,
+} from "../middlewares/authMiddlewares";
+import { getAllCoaches } from "../services/adminService";
 
 export const coachRoutes = new Hono();
 
@@ -52,6 +56,24 @@ coachRoutes.get("/:id", coachAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const result = await getCoach(id);
+
+    return c.json(result);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * GET: /coaches
+ */
+coachRoutes.get("", allRoleAuthorization, async (c) => {
+  try {
+    const result = await getAllCoaches();
 
     return c.json(result);
   } catch (error) {

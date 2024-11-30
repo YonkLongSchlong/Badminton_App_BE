@@ -19,6 +19,7 @@ import {
 import {
   createPaidCourse,
   deletePaidCourse,
+  getAllPaidCourse,
   getPaidCourseByCategoryId,
   getPaidCourseById,
   getPaidCourseForUser,
@@ -58,7 +59,7 @@ paidCourseRoutes.post(
  */
 paidCourseRoutes.get("", allRoleAuthorization, async (c) => {
   try {
-    const result = await getAllFreeCourse();
+    const result = await getAllPaidCourse();
     return c.json(new ApiResponse(200, `All free course`, result));
   } catch (error) {
     if (error instanceof NotFoundError) {

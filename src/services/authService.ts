@@ -60,7 +60,6 @@ export const authenticateLoginOtp = async (data: OtpSchema) => {
   }
 
   const payload = {
-    id: data.id,
     email: data.email,
     role: data.role,
     exp: Math.floor(Date.now() / 1000) + 60 * 260,

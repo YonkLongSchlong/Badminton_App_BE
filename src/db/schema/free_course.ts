@@ -5,6 +5,7 @@ import { createInsertSchema } from "drizzle-zod";
 import type { z } from "zod";
 import { courses } from "./course";
 import { freeLesson } from "./free_lesson";
+import { question } from "./question";
 
 export const freeCourse = pgTable("free_course", {
   ...courses,
@@ -20,6 +21,7 @@ export const freeCourseRelations = relations(freeCourse, ({ one, many }) => ({
     fields: [freeCourse.categoryId],
     references: [category.id],
   }),
+  question: many(question),
 }));
 
 export const freeCourseCreateSchema = createInsertSchema(freeCourse, {

@@ -8,6 +8,8 @@ import type { z } from "zod";
 import { courses } from "./course";
 import { paidLesson } from "./paid_lesson";
 import { review } from "./review";
+import { admin } from "./admin";
+import { question } from "./question";
 
 export const courseStatus = pgEnum("status", ["publish", "non-publish"]);
 
@@ -35,6 +37,7 @@ export const paidCourseRelations = relations(paidCourse, ({ one, many }) => ({
     references: [category.id],
   }),
   coach: one(coach, { fields: [paidCourse.coachId], references: [coach.id] }),
+  question: many(question),
 }));
 
 export const paidCourseCreateSchema = createInsertSchema(paidCourse, {

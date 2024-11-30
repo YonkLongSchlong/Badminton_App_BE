@@ -29,7 +29,7 @@ export const getFreeCourseByCategoryId = async (id: number) => {
 export const getFreeCourseById = async (id: number) => {
   const result = await db.query.freeCourse.findFirst({
     where: eq(freeCourse.id, id),
-    with: { freeLesson: true, category: true },
+    with: { freeLesson: true, category: true, question: true },
   });
 
   if (result === undefined)

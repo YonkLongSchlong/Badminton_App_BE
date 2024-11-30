@@ -60,6 +60,7 @@ export const allRoleAuthorization = createMiddleware(async (c, next) => {
 
 const checkToken = async (c: Context<any, string, {}>): Promise<JWTPayload> => {
   const authHeader: string | undefined = c.req.header("authorization");
+  console.log(authHeader);
 
   if (authHeader === undefined) {
     throw new HTTPException(403, {

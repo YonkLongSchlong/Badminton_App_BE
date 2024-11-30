@@ -16,6 +16,10 @@ export const createPaidCourse = async (data: PaidCourseCreateSchema) => {
   return await db.insert(paidCourse).values(data);
 };
 
+export const getAllPaidCourse = async () => {
+  return await db.select().from(paidCourse);
+};
+
 export const getPaidCourseByCategoryId = async (categoryId: number) => {
   return await db
     .select()
@@ -38,7 +42,7 @@ export const getPaidCourseByCoachId = async (coachId: number) => {
   return await db
     .select()
     .from(paidCourse)
-    .innerJoin(review, eq(review.paidCourseId, paidCourse.id))
+    .leftJoin(review, eq(review.paidCourseId, paidCourse.id))
     .where(eq(paidCourse.coachId, coachId));
 };
 
@@ -78,7 +82,7 @@ export const getPaidCourseForUser = async (
 export const getPaidCourseById = async (id: number) => {
   const result = await db.query.paidCourse.findFirst({
     where: eq(paidCourse.id, id),
-    with: { paidLesson: true, review: true },
+    with: { paidLesson: true, review: true, coach: true, question: true },
   });
 
   if (result === undefined)

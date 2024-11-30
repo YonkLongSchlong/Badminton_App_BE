@@ -9,9 +9,10 @@ import { freeCourseRoutes } from "./src/routes/freeCourseRoutes";
 import { categoryRoutes } from "./src/routes/categoryRoutes";
 import { lessonRoute } from "./src/routes/lessonRoutes";
 import { paidCourseRoutes } from "./src/routes/paidCourseRoutes";
-import { Route53 } from "aws-sdk";
 import { orderRoutes } from "./src/routes/orderRoutes";
-import type { Variables } from "./types";
+import { answerRoutes } from "./src/routes/answerRoutes";
+import { questionRoutes } from "./src/routes/questionRoutes";
+import { openAIRoutes } from "./src/routes/openAIRoutes";
 
 const app = new Hono().basePath("/api/v1");
 
@@ -26,6 +27,9 @@ app
   .route("/lessons", lessonRoute)
   .route("/categories", categoryRoutes)
   .route("/paid-courses", paidCourseRoutes)
-  .route("/order", orderRoutes);
+  .route("/order", orderRoutes)
+  .route("/answers", answerRoutes)
+  .route("/questions", questionRoutes)
+  .route("/openAI", openAIRoutes);
 
 export default app;
