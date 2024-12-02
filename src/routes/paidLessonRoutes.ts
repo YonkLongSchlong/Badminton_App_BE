@@ -8,6 +8,7 @@ import {
 } from "../../types";
 import {
   coachAndAdminAuthorization,
+  coachAuthorization,
   userAuthorization,
 } from "../middlewares/authMiddlewares";
 import {
@@ -24,14 +25,14 @@ import {
   uploadImagePaidLesson,
 } from "../services/lessonService";
 
-const paidLessonRoutes = new Hono<{ Variables: Variables }>();
+export const paidLessonRoutes = new Hono<{ Variables: Variables }>();
 
 /**
  * POST: /paid-lessons
  */
 paidLessonRoutes.post(
   "",
-  coachAndAdminAuthorization,
+  coachAuthorization,
   zValidator("json", paidLessonCreateSchema),
   async (c) => {
     try {
@@ -56,8 +57,7 @@ paidLessonRoutes.post(
 paidLessonRoutes.get("/:id", coachAndAdminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const coachId = c.get("coachId");
-    const result = await getPaidLessonById(id, coachId);
+    const result = await getPaidLessonById(id);
 
     return c.json(result);
   } catch (error) {
@@ -95,14 +95,13 @@ paidLessonRoutes.get("/:id/user", userAuthorization, async (c) => {
  */
 paidLessonRoutes.patch(
   "/:id",
-  coachAndAdminAuthorization,
+  coachAuthorization,
   zValidator("json", paidLessonUpdateSchema),
   async (c) => {
     try {
       const id = Number.parseInt(c.req.param("id"));
       const data = c.req.valid("json");
-      const coachId = c.get("coachId");
-      const result = await updatePaidLesson(id, coachId, data);
+      const result = await updatePaidLesson(id, data);
 
       return c.json(
         new ApiResponse(200, "Paid lesson updated successfully", result)
@@ -121,14 +120,13 @@ paidLessonRoutes.patch(
 /**
  * PATCH: /paid-lessons/image
  */
-paidLessonRoutes.patch("/:id/image", coachAndAdminAuthorization, async (c) => {
+paidLessonRoutes.patch("/:id/image", coachAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const coachId = c.get("coachId");
     const formData = await c.req.formData();
     const file = formData.get("image") as File;
 
-    const result = await uploadImagePaidLesson(id, file, coachId);
+    const result = await uploadImagePaidLesson(id, file);
 
     return c.json(
       new ApiResponse(200, "Paid lesson updated successfully", result)
@@ -146,11 +144,10 @@ paidLessonRoutes.patch("/:id/image", coachAndAdminAuthorization, async (c) => {
 /**
  * DELETE: /paid-lessons/:id
  */
-paidLessonRoutes.delete("/:id", coachAndAdminAuthorization, async (c) => {
+paidLessonRoutes.delete("/:id", coachAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const coachId = c.get("coachId");
-    await deletePaidLesson(id, coachId);
+    await deletePaidLesson(id);
 
     return c.json(new ApiResponse(200, "Paid lesson deleted successfully"));
   } catch (error) {

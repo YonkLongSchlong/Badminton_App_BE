@@ -101,7 +101,7 @@ export const generateQuizQuestionsForPaidLesson = async (
   coachId: number
 ) => {
   try {
-    const lesson = await getPaidLessonById(lessonId, coachId);
+    const lesson = await getPaidLessonById(lessonId);
     if (!lesson) {
       throw new Error(`Lesson with id ${lessonId} not found`);
     }

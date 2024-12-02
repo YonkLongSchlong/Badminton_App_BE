@@ -97,7 +97,7 @@ export const updatePaidCourse = async (
   if (paidCourseToUpdate === undefined)
     throw new NotFoundError(`Course with id ${id} not found`);
 
-  await checkCoachPermission(id, data.coachId);
+  // await checkCoachPermission(id, data.coachId);
 
   return await db
     .update(paidCourse)
@@ -106,13 +106,7 @@ export const updatePaidCourse = async (
     .returning();
 };
 
-export const updatePaidCourseThumbnail = async (
-  id: number,
-  file: File,
-  coachId: number
-) => {
-  await checkCoachPermission(id, coachId);
-
+export const updatePaidCourseThumbnail = async (id: number, file: File) => {
   const fileBuffer = await file.arrayBuffer();
   const base64File = Buffer.from(fileBuffer).toString("base64");
 
@@ -136,7 +130,7 @@ export const updatePaidCourseThumbnail = async (
   return result;
 };
 
-export const deletePaidCourse = async (id: number, coachId: number) => {
+export const deletePaidCourse = async (id: number) => {
   const [paidCourseToUpdate] = await db
     .select()
     .from(paidCourse)
@@ -145,7 +139,7 @@ export const deletePaidCourse = async (id: number, coachId: number) => {
   if (paidCourseToUpdate === undefined)
     throw new NotFoundError(`Course with id ${id} not found`);
 
-  await checkCoachPermission(id, coachId);
+  // await checkCoachPermission(id, coachId);
 
   await db.delete(paidCourse).where(eq(paidCourse.id, id));
 };

@@ -1,8 +1,10 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import {
+  adminAuthorization,
   allRoleAuthorization,
   coachAndAdminAuthorization,
+  coachAuthorization,
   userAuthorization,
 } from "../middlewares/authMiddlewares";
 import {
@@ -21,12 +23,13 @@ import {
   deletePaidCourse,
   getAllPaidCourse,
   getPaidCourseByCategoryId,
+  getPaidCourseByCoachId,
   getPaidCourseById,
   getPaidCourseForUser,
   updatePaidCourse,
   updatePaidCourseThumbnail,
 } from "../services/paidCourseService";
-import { getAllFreeCourse } from "../services/freeCourseService";
+import { coach } from "../db/schema";
 
 export const paidCourseRoutes = new Hono<{ Variables: Variables }>();
 
@@ -35,7 +38,7 @@ export const paidCourseRoutes = new Hono<{ Variables: Variables }>();
  */
 paidCourseRoutes.post(
   "",
-  coachAndAdminAuthorization,
+  coachAuthorization,
   zValidator("json", paidCourseCreateSchema),
   async (c) => {
     try {
@@ -60,7 +63,7 @@ paidCourseRoutes.post(
 paidCourseRoutes.get("", allRoleAuthorization, async (c) => {
   try {
     const result = await getAllPaidCourse();
-    return c.json(new ApiResponse(200, `All free course`, result));
+    return c.json(new ApiResponse(200, `All paid course`, result));
   } catch (error) {
     if (error instanceof NotFoundError) {
       return c.json(new ApiError(404, error.name, error.message), 404);
@@ -112,6 +115,25 @@ paidCourseRoutes.get("/category/:id", allRoleAuthorization, async (c) => {
 });
 
 /**
+ * GET: /paid-courses/coach/:id
+ */
+paidCourseRoutes.get("/coach/:id", coachAndAdminAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const result = await getPaidCourseByCoachId(id);
+
+    return c.json(result);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
  * GET: /paid-courses/:course_id/user
  */
 paidCourseRoutes.get("/:course_id/user", userAuthorization, async (c) => {
@@ -136,7 +158,7 @@ paidCourseRoutes.get("/:course_id/user", userAuthorization, async (c) => {
  */
 paidCourseRoutes.patch(
   "/:id",
-  coachAndAdminAuthorization,
+  coachAuthorization,
   zValidator("json", paidCourseUpdateSchema),
   async (c) => {
     try {
@@ -159,54 +181,44 @@ paidCourseRoutes.patch(
 );
 
 /**
- * PATCH: /paid-courses/:id/thumbnail/
+ * PATCH: /paid-courses/thumbnail/:id
  */
-paidCourseRoutes.patch(
-  "/:id/thumbnail/:coach_id",
-  coachAndAdminAuthorization,
-  async (c) => {
-    try {
-      const id = Number.parseInt(c.req.param("id"));
-      const coachId = c.get("coachId");
-      const formData = await c.req.formData();
-      const file = formData.get("image") as File;
+paidCourseRoutes.patch("/thumbnail/:id", coachAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const formData = await c.req.formData();
+    const file = formData.get("image") as File;
 
-      const result = await updatePaidCourseThumbnail(id, file, coachId);
+    const result = await updatePaidCourseThumbnail(id, file);
 
-      return c.json(
-        new ApiResponse(200, "Paid course updated successfully", result)
-      );
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        return c.json(new ApiError(404, error.name, error.message), 404);
-      }
-      if (error instanceof Error) {
-        return c.json(new ApiError(500, error.name, error.message), 500);
-      }
+    return c.json(
+      new ApiResponse(200, "Paid course updated successfully", result)
+    );
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
-);
+});
 
 /**
  * DELETE: /paid-courses/:id
  */
-paidCourseRoutes.delete(
-  "/:id/:coach_id",
-  coachAndAdminAuthorization,
-  async (c) => {
-    try {
-      const id = Number.parseInt(c.req.param("id"));
-      const coachId = c.get("coachId");
-      await deletePaidCourse(id, coachId);
+paidCourseRoutes.delete("/:id", coachAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    await deletePaidCourse(id);
 
-      return c.json(new ApiResponse(200, "Paid course deleted successfully"));
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        return c.json(new ApiError(404, error.name, error.message), 404);
-      }
-      if (error instanceof Error) {
-        return c.json(new ApiError(500, error.name, error.message), 500);
-      }
+    return c.json(new ApiResponse(200, "Paid course deleted successfully"));
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
-);
+});
