@@ -4,6 +4,7 @@ import {
   pgTable,
   serial,
   timestamp,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { user } from "./user";
 import { relations } from "drizzle-orm";
@@ -16,6 +17,10 @@ export const order = pgTable("order", {
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
   total: decimal("total").notNull(),
+  stripePaymentIntentId: varchar("stripe_payment_intent_id", {
+    length: 255,
+  }),
+  status: varchar("status", { length: 255 }).default("pending"),
   paidCourseId: integer("paid_course_id")
     .references(() => paidCourse.id)
     .notNull(),
@@ -37,6 +42,8 @@ export const orderRelations = relations(order, ({ one }) => ({
 
 export const orderCreateSchema = createInsertSchema(order, {
   id: (schema) => schema.id.optional(),
+  status: (schema) => schema.status.optional(),
+  stripePaymentIntentId: (schema) => schema.stripePaymentIntentId.optional(),
 });
 
 export const paymentIntentCreateSchema = z.object({
@@ -44,6 +51,7 @@ export const paymentIntentCreateSchema = z.object({
   coursePrice: z.number(),
   courseName: z.string(),
   total: z.number(),
+  orderId: z.number(),
 });
 
 export const orderSchema = createInsertSchema(order);

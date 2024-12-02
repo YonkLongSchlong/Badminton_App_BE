@@ -29,6 +29,7 @@ reviewRoutes.get("/course/:course_id", allRoleAuthorization, async (c) => {
       return c.json(new ApiError(404, error.name, error.message), 404);
     }
     if (error instanceof Error) {
+      console.log(error.message);
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }

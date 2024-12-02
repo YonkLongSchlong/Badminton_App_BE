@@ -60,20 +60,29 @@ export const allRoleAuthorization = createMiddleware(async (c, next) => {
 
 const checkToken = async (c: Context<any, string, {}>): Promise<JWTPayload> => {
   const authHeader: string | undefined = c.req.header("authorization");
-  console.log(authHeader);
-
   if (authHeader === undefined) {
-    throw new HTTPException(403, {
+    throw new HTTPException(401, {
       message: "Missing authorization token",
     });
   }
 
   const token = authHeader.substring(7, authHeader.length);
 
-  const payload = await verify(token as string, Bun.env.JWT_SECRET || "");
-  if (payload === undefined) {
-    throw new HTTPException(403, {
+  let payload: JWTPayload;
+  try {
+    payload = (await verify(
+      token as string,
+      Bun.env.JWT_SECRET || ""
+    )) as JWTPayload;
+  } catch (error) {
+    throw new HTTPException(401, {
       message: "Invalid JWT token",
+    });
+  }
+
+  if (payload.exp && Date.now() >= payload.exp * 1000) {
+    throw new HTTPException(401, {
+      message: "JWT token has expired",
     });
   }
 

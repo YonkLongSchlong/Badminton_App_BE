@@ -10,6 +10,7 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import type { z } from "zod";
 import { freeCourse } from "./free_course";
+import { question } from "./question";
 
 export const freeLesson = pgTable("free_lesson", {
   id: serial("id").primaryKey(),
@@ -22,11 +23,12 @@ export const freeLesson = pgTable("free_lesson", {
     .notNull(),
 });
 
-export const freeLessonRelations = relations(freeLesson, ({ one }) => ({
+export const freeLessonRelations = relations(freeLesson, ({ one, many }) => ({
   freeCourse: one(freeCourse, {
     fields: [freeLesson.freeCourseId],
     references: [freeCourse.id],
   }),
+  question: many(question),
 }));
 
 export const freeLessonCreateSchema = createInsertSchema(freeLesson, {

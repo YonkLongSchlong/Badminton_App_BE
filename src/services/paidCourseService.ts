@@ -17,7 +17,10 @@ export const createPaidCourse = async (data: PaidCourseCreateSchema) => {
 };
 
 export const getAllPaidCourse = async () => {
-  return await db.select().from(paidCourse);
+  return await db.query.paidCourse.findMany({
+    where: eq(paidCourse.status, "publish"),
+    with: { category: true },
+  });
 };
 
 export const getPaidCourseByCategoryId = async (categoryId: number) => {
@@ -60,29 +63,20 @@ export const getPaidCourseForUser = async (
       )
     );
 
-  let result = null;
-  if (check === undefined) {
-    result = await db.query.paidCourse.findFirst({
-      where: eq(paidCourse.id, course_id),
-      with: { review: true },
-    });
-  } else {
-    result = await db.query.paidCourse.findFirst({
-      where: eq(paidCourse.id, course_id),
-      with: { paidLesson: true, review: true },
-    });
-  }
+  console.log(check);
 
-  if (result === undefined)
-    throw new NotFoundError(`Course with id ${course_id} not found`);
+  const result = await db.query.paidCourse.findFirst({
+    where: eq(paidCourse.id, course_id),
+    with: { paidLesson: true, review: true },
+  });
 
-  return result;
+  return { result, unlock: check === undefined ? false : true };
 };
 
 export const getPaidCourseById = async (id: number) => {
   const result = await db.query.paidCourse.findFirst({
     where: eq(paidCourse.id, id),
-    with: { paidLesson: true, review: true, coach: true, question: true },
+    with: { paidLesson: true, review: true, coach: true },
   });
 
   if (result === undefined)

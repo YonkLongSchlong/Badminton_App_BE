@@ -8,10 +8,10 @@ import type {
 import { BadRequestError, NotFoundError } from "../../types";
 
 export const getReviewByCourseId = async (courseId: number) => {
-  return await db
-    .select()
-    .from(review)
-    .where(eq(review.paidCourseId, courseId));
+  return await db.query.review.findMany({
+    where: eq(review.paidCourseId, courseId),
+    with: { user: true },
+  });
 };
 
 export const createReview = async (data: ReviewCreateSchema) => {
@@ -86,16 +86,10 @@ export const calculateRating = async (courseId: number, tx = db) => {
     .from(review)
     .where(eq(review.paidCourseId, courseId));
 
-  if (reviews.length === 0) {
-    await tx
-      .update(paidCourse)
-      .set({ star: 0 })
-      .where(eq(paidCourse.id, courseId));
-    return;
-  }
-
   const totalRating = reviews.reduce((acc, review) => acc + review.rating!, 0);
+
   const star = totalRating / reviews.length;
+  console.log(star);
 
   await tx
     .update(paidCourse)

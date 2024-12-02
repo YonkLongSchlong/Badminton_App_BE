@@ -101,7 +101,10 @@ export const deleteFreeLesson = async (id: number) => {
 };
 
 export const getFreeLessonById = async (id: number) => {
-  return await db.query.freeLesson.findFirst({ where: eq(freeLesson.id, id) });
+  return await db.query.freeLesson.findFirst({
+    where: eq(freeLesson.id, id),
+    with: { question: true },
+  });
 };
 
 /* -------------- PAID LESSON ------------------- */
@@ -193,6 +196,7 @@ export const deletePaidLesson = async (id: number, coachId: number) => {
 export const getPaidLessonById = async (id: number, coachId: number) => {
   const result = await db.query.paidLesson.findFirst({
     where: eq(paidLesson.id, id),
+    with: { question: true },
   });
 
   if (result === undefined)

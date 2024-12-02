@@ -16,7 +16,9 @@ export const createFreeCourse = async (data: FreeCourseCreateSchema) => {
 };
 
 export const getAllFreeCourse = async () => {
-  return await db.select().from(freeCourse);
+  return await db.query.freeCourse.findMany({
+    with: { category: true },
+  });
 };
 
 export const getFreeCourseByCategoryId = async (id: number) => {
@@ -29,7 +31,7 @@ export const getFreeCourseByCategoryId = async (id: number) => {
 export const getFreeCourseById = async (id: number) => {
   const result = await db.query.freeCourse.findFirst({
     where: eq(freeCourse.id, id),
-    with: { freeLesson: true, category: true, question: true },
+    with: { freeLesson: true, category: true },
   });
 
   if (result === undefined)

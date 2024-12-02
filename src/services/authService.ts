@@ -59,17 +59,6 @@ export const authenticateLoginOtp = async (data: OtpSchema) => {
     throw new BadRequestError("Invalid OTP code");
   }
 
-  const payload = {
-    email: data.email,
-    role: data.role,
-    exp: Math.floor(Date.now() / 1000) + 60 * 260,
-  };
-
-  const promise = await Promise.all([
-    sign(payload, Bun.env.JWT_SECRET || ""),
-    redisClient.del(data.email),
-  ]);
-
   let result = null;
   switch (data.role) {
     case "user":
@@ -81,6 +70,18 @@ export const authenticateLoginOtp = async (data: OtpSchema) => {
     default:
       result = await getAdminByEmail(data.email);
   }
+
+  const payload = {
+    id: result!.id,
+    email: data.email,
+    role: data.role,
+    exp: Math.floor(Date.now() / 1000) + 60 * 260,
+  };
+
+  const promise = await Promise.all([
+    sign(payload, Bun.env.JWT_SECRET || ""),
+    redisClient.del(data.email),
+  ]);
 
   return { token: promise[0], user: result };
 };

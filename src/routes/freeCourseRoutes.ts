@@ -23,6 +23,7 @@ import {
   updateFreeCourse,
   updateFreeCourseThumbnail,
 } from "../services/freeCourseService";
+import { HTTPException } from "hono/http-exception";
 
 export const freeCourseRoutes = new Hono();
 
@@ -42,6 +43,9 @@ freeCourseRoutes.post(
     } catch (error) {
       if (error instanceof BadRequestError) {
         return c.json(new ApiError(400, error.name, error.message), 400);
+      }
+      if (error instanceof HTTPException) {
+        return c.json(new ApiError(401, error.name, error.message), 403);
       }
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
@@ -80,6 +84,9 @@ freeCourseRoutes.get("/:id", allRoleAuthorization, async (c) => {
     if (error instanceof NotFoundError) {
       return c.json(new ApiError(404, error.name, error.message), 404);
     }
+    if (error instanceof HTTPException) {
+      return c.json(new ApiError(401, error.name, error.message), 403);
+    }
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
@@ -98,6 +105,9 @@ freeCourseRoutes.get("/:id", allRoleAuthorization, async (c) => {
   } catch (error) {
     if (error instanceof NotFoundError) {
       return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof HTTPException) {
+      return c.json(new ApiError(401, error.name, error.message), 403);
     }
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
@@ -125,6 +135,9 @@ freeCourseRoutes.patch(
       if (error instanceof NotFoundError) {
         return c.json(new ApiError(404, error.name, error.message), 404);
       }
+      if (error instanceof HTTPException) {
+        return c.json(new ApiError(401, error.name, error.message), 403);
+      }
       if (error instanceof Error) {
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
@@ -150,6 +163,9 @@ freeCourseRoutes.patch("/thumbnail/:id", adminAuthorization, async (c) => {
     if (error instanceof NotFoundError) {
       return c.json(new ApiError(404, error.name, error.message), 404);
     }
+    if (error instanceof HTTPException) {
+      return c.json(new ApiError(401, error.name, error.message), 403);
+    }
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
@@ -168,6 +184,9 @@ freeCourseRoutes.delete("/:id", adminAuthorization, async (c) => {
   } catch (error) {
     if (error instanceof NotFoundError) {
       return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof HTTPException) {
+      return c.json(new ApiError(401, error.name, error.message), 403);
     }
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);

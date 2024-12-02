@@ -1,11 +1,13 @@
+import { eq } from "drizzle-orm";
 import { db } from "../db";
+import { user_course } from "../db/schema";
 import {
   order,
   type OrderCreateSchema,
   type PaymentIntentCreateSchema,
 } from "../db/schema/order";
 
-const stripe = require("stripe")(Bun.env.STRIPE_SECRET_KEY as string);
+export const stripe = require("stripe")(Bun.env.STRIPE_SECRET_KEY as string);
 
 export const createStripeIntent = async (data: PaymentIntentCreateSchema) => {
   try {
@@ -23,6 +25,11 @@ export const createStripeIntent = async (data: PaymentIntentCreateSchema) => {
       },
     });
 
+    await db
+      .update(order)
+      .set({ stripePaymentIntentId: paymentIntent.id })
+      .where(eq(order.id, data.orderId));
+
     return { paymentIntent: paymentIntent.client_secret };
   } catch (error) {
     if (error instanceof Error) {
@@ -32,5 +39,6 @@ export const createStripeIntent = async (data: PaymentIntentCreateSchema) => {
 };
 
 export const createOrder = async (data: OrderCreateSchema) => {
-  return await db.insert(order).values(data).returning();
+  const [result] = await db.insert(order).values(data).returning();
+  return result;
 };
