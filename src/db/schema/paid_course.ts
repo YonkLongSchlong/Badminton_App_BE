@@ -1,11 +1,4 @@
-import {
-  decimal,
-  doublePrecision,
-  integer,
-  pgEnum,
-  pgTable,
-  real,
-} from "drizzle-orm/pg-core";
+import { decimal, integer, pgEnum, pgTable, real } from "drizzle-orm/pg-core";
 import { coach } from "./coach";
 import { category } from "./category";
 import { relations } from "drizzle-orm";
@@ -25,7 +18,7 @@ export const paidCourse = pgTable("paid_course", {
   lessonQuantity: integer("lesson_quantity").default(0),
   studentQuantity: integer("student_quantity").default(0),
   status: courseStatus("status"),
-  star: real("star").default(5),
+  star: real("star").default(0),
   coachId: integer("coach_id")
     .references(() => coach.id)
     .notNull(),
