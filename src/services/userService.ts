@@ -106,6 +106,6 @@ export const getAllPaidCoursesUserEnrolled = async (id: number) => {
 };
 
 /* ------------------- PRIVATE METHOD -------------------  */
-const getUserById = async (id: number) => {
+export const getUserById = async (id: number) => {
   return await db.query.user.findFirst({ where: eq(user.id, id) });
 };

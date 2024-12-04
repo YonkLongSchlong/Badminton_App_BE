@@ -23,7 +23,10 @@ import {
   updateQuestionForFreeLesson,
   updateQuestionForPaidLesson,
 } from "../services/questionService";
-import { questionCreateSchema } from "../db/schema/question";
+import {
+  questionCreateSchema,
+  questionUpdateSchema,
+} from "../db/schema/question";
 
 export const questionRoutes = new Hono();
 
@@ -124,7 +127,7 @@ questionRoutes.post(
 questionRoutes.patch(
   "/free-lesson/:id",
   coachAndAdminAuthorization,
-  zValidator("json", answerUpdateSchema),
+  zValidator("json", questionUpdateSchema),
   async (c) => {
     try {
       const questionId = Number.parseInt(c.req.param("id"));
@@ -149,7 +152,7 @@ questionRoutes.patch(
 questionRoutes.patch(
   "/paid-lesson/:id",
   coachAndAdminAuthorization,
-  zValidator("json", answerUpdateSchema),
+  zValidator("json", questionUpdateSchema),
   async (c) => {
     try {
       const questionId = Number.parseInt(c.req.param("id"));

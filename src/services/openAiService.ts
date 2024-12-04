@@ -14,9 +14,9 @@ type ResponseOpenAI = {
 const questionTemplate = {
   questions: [
     {
-      question: "",
-      options: ["", "", "", ""],
-      answer: "",
+      question: "Name of the question",
+      options: ["An array of string containing 4 options"],
+      answer: "The right answer for the question",
     },
   ],
 };
