@@ -7,8 +7,10 @@ import type { z } from "zod";
 
 export const review = pgTable("review", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id"),
-  paidCourseId: integer("paid_course_id"),
+  userId: integer("user_id")
+    .references(() => user.id)
+    .notNull(),
+  paidCourseId: integer("paid_course_id").references(() => paidCourse.id),
   rating: integer("rating").default(0),
   comment: text("comment").default(""),
   createAt: timestamp("created_at").defaultNow().notNull(),
