@@ -3,45 +3,73 @@ import { db } from "../db";
 import { user_lesson } from "../db/schema";
 import { getFreeLessonById, getPaidLessonForUser } from "./lessonService";
 import { getUserById } from "./userService";
+import type {
+  UserLessonCreateSchema,
+  UserLessonUpdateSchema,
+} from "../db/schema/user_lesson";
 
-export const createUserFreeLesson = async (
-  userId: number,
-  lessonId: number
+export const createUserLessonFreeLesson = async (
+  data: UserLessonCreateSchema
 ) => {
-  const checkUser = getUserById(userId);
+  const checkUser = getUserById(data.userId);
   if (checkUser === undefined) {
     throw new Error("User not found");
   }
 
-  const checkLesson = getFreeLessonById(lessonId);
+  const checkLesson = getFreeLessonById(data.freeLessonId!);
   if (checkLesson === undefined) {
     throw new Error("Lesson not found");
   }
 
-  await db
-    .insert(user_lesson)
-    .values({ user_id: userId, free_lesson_id: lessonId })
-    .returning();
+  await db.insert(user_lesson).values(data).returning();
 };
 
-export const createUserPaidLesson = async (
-  userId: number,
-  lessonId: number
+export const createUserLessonPaidLesson = async (
+  data: UserLessonCreateSchema
 ) => {
-  const checkUser = getUserById(userId);
+  const checkUser = getUserById(data.userId);
   if (checkUser === undefined) {
     throw new Error("User not found");
   }
 
-  const checkLesson = getPaidLessonForUser(lessonId, userId);
+  const checkLesson = getPaidLessonForUser(data.paidLessonId!, data.userId);
   if (checkLesson === undefined) {
     throw new Error("Lesson not found");
   }
 
-  await db
-    .insert(user_lesson)
-    .values({ user_id: userId, paid_lesson_id: lessonId })
-    .returning();
+  await db.insert(user_lesson).values(data).returning();
+};
+
+export const updateUserLessonPaidLesson = async (
+  data: UserLessonUpdateSchema
+) => {
+  const checkUser = getUserById(data.userId);
+  if (checkUser === undefined) {
+    throw new Error("User not found");
+  }
+
+  const checkLesson = getPaidLessonForUser(data.paidLessonId!, data.userId);
+  if (checkLesson === undefined) {
+    throw new Error("Lesson not found");
+  }
+
+  await db.update(user_lesson).set(data).returning();
+};
+
+export const updateUserLessonFreeLesson = async (
+  data: UserLessonUpdateSchema
+) => {
+  const checkUser = getUserById(data.userId);
+  if (checkUser === undefined) {
+    throw new Error("User not found");
+  }
+
+  const checkLesson = getFreeLessonById(data.freeLessonId!);
+  if (checkLesson === undefined) {
+    throw new Error("Lesson not found");
+  }
+
+  await db.update(user_lesson).set(data).returning();
 };
 
 export const getUserLessons = async (userId: number, lessonId: number) => {
@@ -50,10 +78,10 @@ export const getUserLessons = async (userId: number, lessonId: number) => {
     .from(user_lesson)
     .where(
       and(
-        eq(user_lesson.user_id, userId),
+        eq(user_lesson.userId, userId),
         or(
-          eq(user_lesson.free_lesson_id, lessonId),
-          eq(user_lesson.paid_lesson_id, lessonId)
+          eq(user_lesson.freeLessonId, lessonId),
+          eq(user_lesson.paidLessonId, lessonId)
         )
       )
     );

@@ -96,7 +96,7 @@ freeCourseRoutes.get("/:id", allRoleAuthorization, async (c) => {
 /**
  * GET: /free-course/category/:id
  */
-freeCourseRoutes.get("/:id", allRoleAuthorization, async (c) => {
+freeCourseRoutes.get("category/:id", allRoleAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const result = await getFreeCourseByCategoryId(id);
