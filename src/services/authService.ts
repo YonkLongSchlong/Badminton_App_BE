@@ -151,6 +151,7 @@ export const sendOtp = async (email: string) => {
   }
 
   const result = generateOtp();
+  console.log("Otp:", result.otp);
   await redisClient.set(email, result.otp, { EX: 60 * 5 });
   await sendOtpEmail(email, result.otp);
 };
