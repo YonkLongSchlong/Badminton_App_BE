@@ -17,7 +17,10 @@ import {
   updateQuestionForFreeLesson,
   updateQuestionForPaidLesson,
 } from "../services/questionService";
-import { questionCreateSchema, questionUpdateSchema } from "../db/schema/question";
+import {
+  questionCreateSchema,
+  questionUpdateSchema,
+} from "../db/schema/question";
 
 export const questionRoutes = new Hono();
 

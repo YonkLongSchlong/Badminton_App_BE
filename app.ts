@@ -15,6 +15,7 @@ import { answerRoutes } from "./src/routes/answerRoutes";
 import { questionRoutes } from "./src/routes/questionRoutes";
 import { openAIRoutes } from "./src/routes/openAIRoutes";
 import { reviewRoutes } from "./src/routes/reviewRoutes";
+import { userLessonRoutes } from "./src/routes/userLessonRoutes";
 
 const app = new Hono().basePath("/api/v1");
 
@@ -34,6 +35,7 @@ app
   .route("/answers", answerRoutes)
   .route("/questions", questionRoutes)
   .route("/openAI", openAIRoutes)
-  .route("/reviews", reviewRoutes);
+  .route("/reviews", reviewRoutes)
+  .route("/user-lesson", userLessonRoutes);
 
 export default app;

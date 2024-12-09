@@ -13,3 +13,4 @@ export { paidLesson, paidLessonRelations } from "./paid_lesson";
 export { review, reviewRelations } from "./review";
 export { answer, answerRelations } from "./answer";
 export { question, questionRelations } from "./question";
+export { user_lesson, userLessonRelations } from "./user_lesson";

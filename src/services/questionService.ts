@@ -7,12 +7,14 @@ import { NotFoundError } from "../../types";
 export const getAllQuestionsByFreeLessonId = async (freeLessonId: number) => {
   return await db.query.question.findMany({
     where: eq(question.freeLessonId, freeLessonId),
+    with: { answer: true },
   });
 };
 
 export const getAllQuestionsByPaidLessonId = async (paidLessonId: number) => {
   return await db.query.question.findMany({
     where: eq(question.paidLessonId, paidLessonId),
+    with: { answer: true },
   });
 };
 
