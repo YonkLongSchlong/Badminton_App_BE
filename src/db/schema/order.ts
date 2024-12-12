@@ -59,7 +59,6 @@ export const paymentIntentCreateSchema = z.object({
   user_id: z.number(),
   coursePrice: z.number(),
   courseName: z.string(),
-  courseId: z.number(),
   total: z.number(),
   orderId: z.number(),
 });
