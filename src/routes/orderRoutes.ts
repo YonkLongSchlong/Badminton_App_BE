@@ -189,9 +189,12 @@ orderRoutes.get("/coach/:id", coachAndAdminAuthorization, async (c) => {
 orderRoutes.get("/revenue/coach/:id", coachAndAdminAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
-    const orders = await getRevenueByMonthForCoach(id);
+    const revenueData = await getRevenueByMonthForCoach(id);
+    return c.json(
+      new ApiResponse(200, "Revenue data fetched successfully", revenueData)
+    );
 
-    return c.json(orders);
+    return c.json(revenueData);
   } catch (error) {
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);
