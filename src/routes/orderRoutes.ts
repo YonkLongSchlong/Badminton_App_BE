@@ -1,5 +1,10 @@
 import { Hono } from "hono";
-import { ApiError, ApiResponse, BadRequestError, NotFoundError } from "../../types";
+import {
+  ApiError,
+  ApiResponse,
+  BadRequestError,
+  NotFoundError,
+} from "../../types";
 import {
   createOrder,
   createStripeIntent,
@@ -16,12 +21,15 @@ import {
   type OrderCreateSchema,
 } from "../db/schema/order";
 import { zValidator } from "@hono/zod-validator";
-import { coachAndAdminAuthorization, userAuthorization } from "../middlewares/authMiddlewares";
+import {
+  coachAndAdminAuthorization,
+  userAuthorization,
+} from "../middlewares/authMiddlewares";
 import { env } from "hono/adapter";
 import Stripe from "stripe";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { user_course } from "../db/schema";
+import { paidCourse, user_course } from "../db/schema";
 
 export const orderRoutes = new Hono();
 
@@ -93,6 +101,11 @@ orderRoutes.post("/webhook", async (c) => {
           .from(order)
           .where(eq(order.stripePaymentIntentId, paymentIntent.id));
 
+        const [paidCourseUpdate] = await db
+          .select()
+          .from(paidCourse)
+          .where(eq(paidCourse.id, orderToPay.paidCourseId));
+
         await Promise.all([
           db
             .update(order)
@@ -104,6 +117,10 @@ orderRoutes.post("/webhook", async (c) => {
             user_id: orderToPay.userId,
             status: 0,
           }),
+          db
+            .update(paidCourse)
+            .set({ studentQuantity: paidCourseUpdate.studentQuantity! + 1 })
+            .where(eq(paidCourse.id, orderToPay.paidCourseId)),
         ]);
 
         return c.json(new ApiResponse(200, "Process payment successfully"));
@@ -154,7 +171,9 @@ orderRoutes.get("/", coachAndAdminAuthorization, async (c) => {
 orderRoutes.get("/revenue", coachAndAdminAuthorization, async (c) => {
   try {
     const revenueData = await getRevenueByMonth();
-    return c.json(new ApiResponse(200, "Revenue data fetched successfully", revenueData));
+    return c.json(
+      new ApiResponse(200, "Revenue data fetched successfully", revenueData)
+    );
   } catch (error) {
     if (error instanceof Error) {
       return c.json(new ApiError(500, error.name, error.message), 500);

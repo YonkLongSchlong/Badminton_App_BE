@@ -47,16 +47,19 @@ export const orderCreateSchema = createInsertSchema(order, {
 });
 
 export const orderUpdateCreatedAtSchema = z.object({
-  created_at: z.string().regex(
-    /^\d{4}-\d{2}-\d{2}$/,
-    "created_at must be a valid date in the format YYYY-MM-DD"
-  ),
+  created_at: z
+    .string()
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "created_at must be a valid date in the format YYYY-MM-DD"
+    ),
 });
 
 export const paymentIntentCreateSchema = z.object({
   user_id: z.number(),
   coursePrice: z.number(),
   courseName: z.string(),
+  courseId: z.number(),
   total: z.number(),
   orderId: z.number(),
 });
@@ -64,7 +67,9 @@ export const paymentIntentCreateSchema = z.object({
 export const orderSchema = createInsertSchema(order);
 export type OrderSchema = z.infer<typeof orderSchema>;
 export type OrderCreateSchema = z.infer<typeof orderCreateSchema>;
-export type OrderUpdateCreatedAtSchema = z.infer<typeof orderUpdateCreatedAtSchema>;
+export type OrderUpdateCreatedAtSchema = z.infer<
+  typeof orderUpdateCreatedAtSchema
+>;
 export type PaymentIntentCreateSchema = z.infer<
   typeof paymentIntentCreateSchema
 >;

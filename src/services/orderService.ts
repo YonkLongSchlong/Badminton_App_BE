@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
-import { user_course } from "../db/schema";
+import { paidCourse, user_course } from "../db/schema";
 import {
   order,
   type OrderCreateSchema,
@@ -93,7 +93,7 @@ export const getRevenueByMonth = async () => {
 
 export const getOrderById = async (id: number) => {
   return await db.query.order.findFirst({
-    where: eq(order.id, id)
+    where: eq(order.id, id),
   });
 };
 
