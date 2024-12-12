@@ -53,7 +53,7 @@ export const createFreeLesson = async (data: FreeLessonCreateSchema) => {
       await tx
         .update(freeCourse)
         .set({ lessonQuantity: freeCourseToUpdate.lessonQuantity! + 1 })
-        .where(eq(freeCourse.id, data.freeCourseId)); 
+        .where(eq(freeCourse.id, data.freeCourseId));
     });
   } catch (error) {
     throw new Error("Failed to add new lesson");
@@ -109,10 +109,7 @@ export const getFreeLessonById = async (id: number) => {
 };
 
 /* -------------- PAID LESSON ------------------- */
-export const uploadImagePaidLesson = async (
-  id: number,
-  file: File,
-) => {
+export const uploadImagePaidLesson = async (id: number, file: File) => {
   try {
     await getPaidLessonById(id);
 
@@ -149,7 +146,7 @@ export const createPaidLesson = async (data: PaidLessonCreateSchema) => {
       await tx
         .update(paidCourse)
         .set({ lessonQuantity: paidCourseToUpdate.lessonQuantity! + 1 })
-        .where(eq(paidCourse.id, data.paidCourseId)); 
+        .where(eq(paidCourse.id, data.paidCourseId));
     });
   } catch (error) {
     throw new Error("Failed to added new lesson");
@@ -236,7 +233,7 @@ const checkUserPermission = async (courseId: number, userId: number) => {
     .select()
     .from(user_course)
     .where(eq(user_course.paid_course_id, courseId))
-    .innerJoin(user_course, eq(user.id, userId));
+    .innerJoin(user, eq(user.id, userId));
 
   if (checkUser === undefined) {
     throw new BadRequestError(

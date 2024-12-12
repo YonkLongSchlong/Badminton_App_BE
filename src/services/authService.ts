@@ -146,6 +146,7 @@ export const resetPassword = async (data: ResetPasswordSchema) => {
 
 export const sendOtp = async (email: string) => {
   const otp = await redisClient.get(email);
+
   if (otp !== null) {
     redisClient.del(email);
   }

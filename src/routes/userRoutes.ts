@@ -65,6 +65,25 @@ userRoutes.get("/:id", userAuthorization, async (c) => {
 });
 
 /**
+ * GET: /users/:id/enrolled
+ */
+userRoutes.get("/:id/enrolled", userAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const user = await getUser(id);
+
+    return c.json(user);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
  * PATCH: /users/:id
  */
 userRoutes.patch(

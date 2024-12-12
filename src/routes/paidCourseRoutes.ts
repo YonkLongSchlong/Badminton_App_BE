@@ -48,6 +48,7 @@ paidCourseRoutes.post(
       return c.json(new ApiResponse(200, "Paid course created successfully"));
     } catch (error) {
       if (error instanceof BadRequestError) {
+        console.log(error);
         return c.json(new ApiError(400, error.name, error.message), 400);
       }
       if (error instanceof Error) {
@@ -69,6 +70,7 @@ paidCourseRoutes.get("", allRoleAuthorization, async (c) => {
       return c.json(new ApiError(404, error.name, error.message), 404);
     }
     if (error instanceof Error) {
+      console.log(error);
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
@@ -89,7 +91,6 @@ paidCourseRoutes.get("/:id", coachAndAdminAuthorization, async (c) => {
     }
     if (error instanceof Error) {
       console.log(error);
-
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
@@ -109,6 +110,7 @@ paidCourseRoutes.get("/category/:id", allRoleAuthorization, async (c) => {
       return c.json(new ApiError(404, error.name, error.message), 404);
     }
     if (error instanceof Error) {
+      console.log(error);
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
@@ -128,6 +130,7 @@ paidCourseRoutes.get("/coach/:id", coachAndAdminAuthorization, async (c) => {
       return c.json(new ApiError(404, error.name, error.message), 404);
     }
     if (error instanceof Error) {
+      console.log(error);
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
@@ -148,6 +151,7 @@ paidCourseRoutes.get("/:course_id/user", userAuthorization, async (c) => {
       return c.json(new ApiError(404, error.name, error.message), 404);
     }
     if (error instanceof Error) {
+      console.log(error);
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
@@ -174,6 +178,7 @@ paidCourseRoutes.patch(
         return c.json(new ApiError(404, error.name, error.message), 404);
       }
       if (error instanceof Error) {
+        console.log(error);
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
     }
@@ -199,6 +204,7 @@ paidCourseRoutes.patch("/thumbnail/:id", coachAuthorization, async (c) => {
       return c.json(new ApiError(404, error.name, error.message), 404);
     }
     if (error instanceof Error) {
+      console.log(error);
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
@@ -218,6 +224,7 @@ paidCourseRoutes.delete("/:id", coachAuthorization, async (c) => {
       return c.json(new ApiError(404, error.name, error.message), 404);
     }
     if (error instanceof Error) {
+      console.log(error);
       return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }

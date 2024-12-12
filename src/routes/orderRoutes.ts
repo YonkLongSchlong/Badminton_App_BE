@@ -78,6 +78,8 @@ orderRoutes.post("/webhook", async (c) => {
       signature,
       STRIPE_WEBHOOK_SECRET
     );
+    console.log(event.type);
+
     switch (event.type) {
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object;
@@ -87,14 +89,16 @@ orderRoutes.post("/webhook", async (c) => {
           .from(order)
           .where(eq(order.stripePaymentIntentId, paymentIntent.id));
 
-        Promise.all([
-          await db
+        await Promise.all([
+          db
             .update(order)
             .set({ status: "success" })
             .where(eq(order.stripePaymentIntentId, paymentIntent.id)),
-          await db.insert(user_course).values({
+          db.insert(user_course).values({
             paid_course_id: orderToPay.paidCourseId,
+            free_course_id: null,
             user_id: orderToPay.userId,
+            status: 0,
           }),
         ]);
 
@@ -113,7 +117,8 @@ orderRoutes.post("/webhook", async (c) => {
         );
       }
       default:
-        break;
+        console.log("Here");
+        return c.text("Event type not handled", 200);
     }
   } catch (err) {
     const errorMessage = `⚠️  Webhook signature verification failed. ${

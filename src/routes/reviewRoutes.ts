@@ -81,25 +81,24 @@ reviewRoutes.patch(
 /**
  * DELETE: /reviews/:id
  */
-reviewRoutes.delete(
-  "/:id",
-  userAuthorization,
-  zValidator("json", reviewUpdateSchema),
-  async (c) => {
-    try {
-      const id = Number.parseInt(c.req.param("id"));
-      const { courseId, userId } = await c.req.parseBody();
-      const result = await deleteReview(
-        id,
-        Number.parseInt(courseId as string),
-        Number.parseInt(userId as string)
-      );
+reviewRoutes.delete("/:id", userAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const body = await c.req.json();
+    console.log(body);
 
-      return c.json(new ApiResponse(200, `Review created`, result));
-    } catch (error) {
-      if (error instanceof Error) {
-        return c.json(new ApiError(500, error.name, error.message), 500);
-      }
+    const { courseId, userId } = body;
+
+    const result = await deleteReview(
+      id,
+      Number.parseInt(courseId as string),
+      Number.parseInt(userId as string)
+    );
+
+    return c.json(new ApiResponse(200, `Review created`, result));
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
     }
   }
-);
+});

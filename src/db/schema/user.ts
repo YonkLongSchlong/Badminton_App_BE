@@ -28,7 +28,6 @@ export const user = pgTable("user", {
   gender: text("gender"),
   avatar: text("avatar"),
   role: roleEnum("role"),
-  startedCourses: integer("started_course"),
   ongoingCourses: integer("ongoing_course"),
   finishedCourse: integer("finished_course"),
 });
@@ -45,7 +44,6 @@ export const userCreateSchema = createInsertSchema(user, {
   avatar: (schema) => schema.avatar.optional(),
   dob: (schema) => schema.dob.optional(),
   gender: (schema) => schema.gender.optional(),
-  startedCourses: (schema) => schema.startedCourses.optional(),
   ongoingCourses: (schema) => schema.ongoingCourses.optional(),
   finishedCourse: (schema) => schema.finishedCourse.optional(),
 });
@@ -59,7 +57,6 @@ export const userUpdateSchema = createInsertSchema(user, {
   password: (schema) => schema.password.optional(),
   role: (schema) => schema.role.optional(),
   avatar: (schema) => schema.avatar.optional(),
-  startedCourses: (schema) => schema.startedCourses.optional(),
   ongoingCourses: (schema) => schema.ongoingCourses.optional(),
   finishedCourse: (schema) => schema.finishedCourse.optional(),
 });

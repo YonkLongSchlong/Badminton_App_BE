@@ -34,6 +34,7 @@ export const reviewUpdateSchema = createInsertSchema(review, {
   id: (schema) => schema.id.optional(),
   rating: (schema) => schema.rating.optional(),
   comment: (schema) => schema.comment.optional(),
+  paidCourseId: (schema) => schema.paidCourseId.optional(),
 });
 
 export type ReviewCreateSchema = z.infer<typeof reviewCreateSchema>;

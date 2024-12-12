@@ -19,7 +19,9 @@ export const answer = pgTable("answer", {
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
   text: text("text").notNull(),
-  questionId: integer("question_id").references(() => question.id),
+  questionId: integer("question_id").references(() => question.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const answerRelations = relations(answer, ({ one }) => ({

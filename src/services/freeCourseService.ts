@@ -22,10 +22,10 @@ export const getAllFreeCourse = async () => {
 };
 
 export const getFreeCourseByCategoryId = async (id: number) => {
-  return await db
-    .select()
-    .from(freeCourse)
-    .where(eq(freeCourse.categoryId, id));
+  return await db.query.freeCourse.findMany({
+    where: eq(freeCourse.categoryId, id),
+    with: { category: true },
+  });
 };
 
 export const getFreeCourseById = async (id: number) => {

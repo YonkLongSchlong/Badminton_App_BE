@@ -89,7 +89,6 @@ export const calculateRating = async (courseId: number, tx = db) => {
   const totalRating = reviews.reduce((acc, review) => acc + review.rating!, 0);
 
   const star = totalRating / reviews.length;
-  console.log(star);
 
   await tx
     .update(paidCourse)

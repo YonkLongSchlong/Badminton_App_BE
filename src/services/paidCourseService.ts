@@ -24,11 +24,13 @@ export const getAllPaidCourse = async () => {
 };
 
 export const getPaidCourseByCategoryId = async (categoryId: number) => {
-  return await db
-    .select()
-    .from(paidCourse)
-    .innerJoin(review, eq(review.paidCourseId, paidCourse.id))
-    .where(eq(paidCourse.categoryId, categoryId));
+  return await db.query.paidCourse.findMany({
+    where: and(
+      eq(paidCourse.status, "publish"),
+      eq(paidCourse.categoryId, categoryId)
+    ),
+    with: { category: true, review: true },
+  });
 };
 
 export const getPaidCourseByStatus = async (
