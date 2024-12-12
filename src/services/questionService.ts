@@ -50,8 +50,8 @@ export const updateQuestionForFreeLesson = async (
   questionId: number,
   data: QuestionCreateSchema
 ) => {
-  const freeLessonCheck = await db.query.paidLesson.findFirst({
-    where: eq(paidLesson.id, data.paidLessonId!),
+  const freeLessonCheck = await db.query.freeLesson.findFirst({
+    where: eq(freeLesson.id, data.freeLessonId!),
   });
 
   if (freeLessonCheck === undefined) {

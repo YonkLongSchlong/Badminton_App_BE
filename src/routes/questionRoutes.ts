@@ -4,15 +4,9 @@ import {
   allRoleAuthorization,
   coachAndAdminAuthorization,
 } from "../middlewares/authMiddlewares";
-import {
-  createAnswer,
-  deleteAnswer,
-  getAllAnswerByQuestionId,
-  updateAnswer,
-} from "../services/answerService";
+
 import { ApiError, ApiResponse } from "../../types";
 import { BadRequestError, NotFoundError } from "openai";
-import { answerCreateSchema, answerUpdateSchema } from "../db/schema/answer";
 import {
   createQuestionForFreeLesson,
   createQuestionForPaidLesson,
@@ -36,9 +30,9 @@ questionRoutes.get(
   async (c) => {
     try {
       const questionId = Number.parseInt(c.req.param("lessonId"));
-      const answers = await getAllQuestionsByPaidLessonId(questionId);
+      const questions = await getAllQuestionsByPaidLessonId(questionId);
 
-      return c.json(answers);
+      return c.json(questions);
     } catch (error) {
       if (error instanceof BadRequestError) {
         return c.json(new ApiError(400, error.name, error.message), 400);
@@ -59,9 +53,32 @@ questionRoutes.get(
   async (c) => {
     try {
       const questionId = Number.parseInt(c.req.param("lessonId"));
-      const answers = await getAllQuestionsByFreeLessonId(questionId);
+      const questions = await getAllQuestionsByFreeLessonId(questionId);
 
-      return c.json(answers);
+      return c.json(questions);
+    } catch (error) {
+      if (error instanceof BadRequestError) {
+        return c.json(new ApiError(400, error.name, error.message), 400);
+      }
+      if (error instanceof NotFoundError) {
+        return c.json(new ApiError(404, error.name, error.message), 404);
+      }
+      if (error instanceof Error) {
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
+    }
+  }
+);
+
+questionRoutes.get(
+  "/:id",
+  allRoleAuthorization,
+  async (c) => {
+    try {
+      const questionId = Number.parseInt(c.req.param("id"));
+      const question = await getQuestionById(questionId);
+
+      return c.json(question);
     } catch (error) {
       if (error instanceof BadRequestError) {
         return c.json(new ApiError(400, error.name, error.message), 400);

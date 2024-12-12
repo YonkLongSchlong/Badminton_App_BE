@@ -40,6 +40,29 @@ export const uploadImageFreeLesson = async (file: File) => {
   }
 };
 
+export const uploadVideoFreeLesson = async (file: File) => {
+  try {
+    const fileBuffer = await file.arrayBuffer();
+    const base64File = Buffer.from(fileBuffer).toString("base64");
+
+    const uploadParams = {
+      Bucket: Bun.env.S3_VIDEO_FREE_LESSON_BUCKET, 
+      Key: file.name,
+      Body: Buffer.from(base64File, "base64"),
+      ContentEncoding: "base64",
+      ContentType: file.type,
+    };
+
+    await s3Client.send(new PutObjectCommand(uploadParams));
+    const videoUrl = `https://${uploadParams.Bucket}.s3.${Bun.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+
+    return videoUrl;
+  } catch (error) {
+    console.log("Error:", error);
+    throw new BadRequestError("Failed to upload video");
+  }
+};
+
 export const createFreeLesson = async (data: FreeLessonCreateSchema) => {
   const freeCourseToUpdate = await getFreeCourseById(data.freeCourseId!);
 

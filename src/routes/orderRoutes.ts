@@ -1,18 +1,22 @@
 import { Hono } from "hono";
-import { ApiError, ApiResponse } from "../../types";
+import { ApiError, ApiResponse, BadRequestError, NotFoundError } from "../../types";
 import {
   createOrder,
   createStripeIntent,
+  getAllOrders,
+  getRevenueByMonth,
   stripe,
+  updateCreatedAtOrder,
 } from "../services/orderService";
 import {
   order,
   orderCreateSchema,
+  orderUpdateCreatedAtSchema,
   paymentIntentCreateSchema,
   type OrderCreateSchema,
 } from "../db/schema/order";
 import { zValidator } from "@hono/zod-validator";
-import { userAuthorization } from "../middlewares/authMiddlewares";
+import { coachAndAdminAuthorization, userAuthorization } from "../middlewares/authMiddlewares";
 import { env } from "hono/adapter";
 import Stripe from "stripe";
 import { db } from "../db";
@@ -128,3 +132,60 @@ orderRoutes.post("/webhook", async (c) => {
     return c.text(errorMessage, 400);
   }
 });
+
+/**
+ * GET: /order
+ */
+orderRoutes.get("/", coachAndAdminAuthorization, async (c) => {
+  try {
+    const orders = await getAllOrders();
+
+    return c.json(orders);
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * GET: /order/revenue
+ */
+orderRoutes.get("/revenue", coachAndAdminAuthorization, async (c) => {
+  try {
+    const revenueData = await getRevenueByMonth();
+    return c.json(new ApiResponse(200, "Revenue data fetched successfully", revenueData));
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * PATCH: /order/:id
+ */
+orderRoutes.patch(
+  "/:id",
+  coachAndAdminAuthorization,
+  zValidator("json", orderUpdateCreatedAtSchema),
+  async (c) => {
+    try {
+      const id = Number.parseInt(c.req.param("id"));
+      const data = c.req.valid("json");
+      await updateCreatedAtOrder(id, data);
+
+      return c.json(new ApiResponse(200, "Order updated successfully"));
+    } catch (error) {
+      if (error instanceof BadRequestError) {
+        return c.json(new ApiError(400, error.name, error.message), 400);
+      }
+      if (error instanceof NotFoundError) {
+        return c.json(new ApiError(404, error.name, error.message), 404);
+      }
+      if (error instanceof Error) {
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
+    }
+  }
+);
