@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
-import { paidCourse, user_course } from "../db/schema";
 import {
   order,
   type OrderCreateSchema,
+  type OrderSchema,
   type OrderUpdateCreatedAtSchema,
   type PaymentIntentCreateSchema,
 } from "../db/schema/order";
@@ -48,6 +48,56 @@ export const createOrder = async (data: OrderCreateSchema) => {
 export const getAllOrders = async () => {
   const orders = await db.select().from(order);
   return orders;
+};
+
+export const getAllOrderForCoach = async (id: Number) => {
+  const orders = await db.query.order.findMany({
+    with: { paidCourse: true },
+  });
+
+  const orderForCoach: any = [];
+  orders.forEach((order) => {
+    if (order.paidCourse.coachId == id) {
+      orderForCoach.push(order);
+    }
+  });
+
+  return orderForCoach;
+};
+
+export const getRevenueByMonthForCoach = async (id: Number) => {
+  const orders = await getAllOrderForCoach(id);
+
+  const revenueByMonth: { [key: string]: number } = {
+    January: 0,
+    February: 0,
+    March: 0,
+    April: 0,
+    May: 0,
+    June: 0,
+    July: 0,
+    August: 0,
+    September: 0,
+    October: 0,
+    November: 0,
+    December: 0,
+  };
+
+  orders.forEach((order: OrderSchema) => {
+    const monthIndex = new Date(order.created_at as any).getMonth();
+    const monthName = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+    }).format(new Date(0, monthIndex));
+
+    revenueByMonth[monthName] += (Number(order.total) || 0) * 1000;
+  });
+
+  const revenueData = Object.keys(revenueByMonth).map((month) => ({
+    month,
+    revenue: revenueByMonth[month],
+  }));
+
+  return revenueData;
 };
 
 export const getRevenueByMonth = async () => {

@@ -8,8 +8,10 @@ import {
 import {
   createOrder,
   createStripeIntent,
+  getAllOrderForCoach,
   getAllOrders,
   getRevenueByMonth,
+  getRevenueByMonthForCoach,
   stripe,
   updateCreatedAtOrder,
 } from "../services/orderService";
@@ -156,6 +158,38 @@ orderRoutes.post("/webhook", async (c) => {
 orderRoutes.get("/", coachAndAdminAuthorization, async (c) => {
   try {
     const orders = await getAllOrders();
+
+    return c.json(orders);
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * GET: /order/coach/:id
+ */
+orderRoutes.get("/coach/:id", coachAndAdminAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const orders = await getAllOrderForCoach(id);
+
+    return c.json(orders);
+  } catch (error) {
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * GET: /order/revenue/coach/:id
+ */
+orderRoutes.get("/revenue/coach/:id", coachAndAdminAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const orders = await getRevenueByMonthForCoach(id);
 
     return c.json(orders);
   } catch (error) {

@@ -8,7 +8,7 @@ import {
 } from "../db/schema/paid_course";
 import { s3Client } from "../../utils/configAWS";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { review, user_course } from "../db/schema";
+import { paidLesson, review, user_course } from "../db/schema";
 import { check } from "drizzle-orm/mysql-core";
 
 /* -------------- PAID COURSE ------------------- */
@@ -78,7 +78,16 @@ export const getPaidCourseForUser = async (
 export const getPaidCourseById = async (id: number) => {
   const result = await db.query.paidCourse.findFirst({
     where: eq(paidCourse.id, id),
-    with: { paidLesson: true, review: true, coach: true },
+    with: {
+      paidLesson: true,
+      review: true,
+      coach: true,
+      user_course: {
+        with: {
+          user: true,
+        },
+      },
+    },
   });
 
   if (result === undefined)
