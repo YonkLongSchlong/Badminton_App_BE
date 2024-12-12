@@ -169,3 +169,12 @@ export const checkCoachPermission = async (
     );
   }
 };
+
+export const getAllUserEnrollInCourse = async (coachId: number) => {
+  return await db.query.paidCourse.findMany({
+    where: eq(paidCourse.coachId, coachId),
+    with: {
+      user_course: true,
+    },
+  });
+};

@@ -36,8 +36,11 @@ export const updateUser = async (id: number, data: UserUpdateSchema) => {
   const userToUpdate = await getUserById(id);
   if (userToUpdate === undefined)
     throw new NotFoundError(`User with id ${id} not found`);
+  console.log(userToUpdate);
 
   const checkUserEmail = await getUserByEmail(data.email);
+  console.log(checkUserEmail);
+
   if (checkUserEmail !== undefined && checkUserEmail.id !== userToUpdate.id)
     throw new BadRequestError(`This email have already registered`);
 
@@ -87,6 +90,7 @@ export const updateUserPassword = async (
     throw new NotFoundError(`User with id ${id} not found`);
 
   const check = await compare(data.password, userToUpdate.password);
+
   if (!check) throw new BadRequestError(`Password not match, please try again`);
 
   const newPassword = await hashPassword(data.newPassword);

@@ -22,6 +22,7 @@ import {
   createPaidCourse,
   deletePaidCourse,
   getAllPaidCourse,
+  getAllUserEnrollInCourse,
   getPaidCourseByCategoryId,
   getPaidCourseByCoachId,
   getPaidCourseById,
@@ -156,6 +157,30 @@ paidCourseRoutes.get("/:course_id/user", userAuthorization, async (c) => {
     }
   }
 });
+
+/**
+ * GET: /paid-courses/:course_id/user-enroll
+ */
+paidCourseRoutes.get(
+  "/:course_id/user-enroll",
+  coachAndAdminAuthorization,
+  async (c) => {
+    try {
+      const course_id = Number.parseInt(c.req.param("course_id"));
+      const result = await getAllUserEnrollInCourse(course_id);
+
+      return c.json(result);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return c.json(new ApiError(404, error.name, error.message), 404);
+      }
+      if (error instanceof Error) {
+        console.log(error);
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
+    }
+  }
+);
 
 /**
  * PATCH: /paid-courses/:id

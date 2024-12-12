@@ -150,6 +150,8 @@ userRoutes.patch(
     try {
       const id = Number.parseInt(c.req.param("id"));
       const data = c.req.valid("json");
+      console.log(data);
+
       await updateUserPassword(id, data);
 
       return c.json(new ApiResponse(200, "Password updated successfully"));
