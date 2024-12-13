@@ -5,6 +5,7 @@ import {
   authenticateLogin,
   authenticateLoginOtp,
   forgotPassword,
+  resetPassword,
 } from "../services/authService";
 import {
   ApiResponse,
@@ -119,13 +120,13 @@ authRoute.post(
  */
 authRoute.post(
   "/reset-password",
-  zValidator("json", forgotPasswordSchema),
+  zValidator("json", resetPasswordSchema),
   async (c) => {
     try {
       const data = c.req.valid("json");
-      await forgotPassword(data);
+      await resetPassword(data);
 
-      return c.json(new ApiResponse(200, "OTP sent to email successfully"));
+      return c.json(new ApiResponse(200, "Reset password successfully"));
     } catch (error) {
       if (error instanceof NotFoundError) {
         return c.json(new ApiError(404, error.name, error.message), 404);

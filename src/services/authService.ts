@@ -136,9 +136,10 @@ export const resetPassword = async (data: ResetPasswordSchema) => {
       break;
   }
 
+  const hashedPassword = await hashPassword(data.newPassword);
   await db
     .update(targetTable)
-    .set({ password: data.newPassword })
+    .set({ password: hashedPassword })
     .where(eq(targetTable.email, data.email));
 };
 

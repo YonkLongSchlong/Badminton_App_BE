@@ -22,8 +22,12 @@ export const question = pgTable("question", {
   updated_at: timestamp("updated_at").defaultNow().notNull(),
   text: text("text").notNull(),
   rightAnswer: varchar("right_answer").notNull(),
-  freeLessonId: integer("free_lesson_id").references(() => freeLesson.id),
-  paidLessonId: integer("paid_lesson_id").references(() => paidLesson.id),
+  freeLessonId: integer("free_lesson_id").references(() => freeLesson.id, {
+    onDelete: "cascade",
+  }),
+  paidLessonId: integer("paid_lesson_id").references(() => paidLesson.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const questionRelations = relations(question, ({ many, one }) => ({
