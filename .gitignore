@@ -176,5 +176,4 @@ dist
 # Finder (MacOS) folder config
 .DS_Store
 
-# Migration files
-src/db/migrations
+
