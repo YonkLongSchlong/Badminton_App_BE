@@ -5,9 +5,10 @@
   "scripts": {
     "start": "bun index.ts",
     "dev": "bun --watch index.ts",
-    "db:generate": "drizzle-kit generate --dialect=postgresql --schema ./src/db/schema/index.ts --out=./src/db/migrations",
-    "db:migrate": "bun run ./src/db/migrate.ts",
-    "db:seed": "bun run ./src/db/seed.ts"
+    "db:generate": "drizzle-kit generate --dialect=postgresql --schema src/db/schema/index.ts --out=src/db/migrations",
+    "db:migrate": "bun run src/db/migrate.ts",
+    "db:seed": "bun run/src/db/seed.ts",
+    "build": "bun build index.ts --compile --outfile server"
   },
   "devDependencies": {
     "@types/bun": "latest",

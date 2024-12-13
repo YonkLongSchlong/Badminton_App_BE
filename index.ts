@@ -29,9 +29,8 @@ const corsMiddleware = async (req: Request): Promise<Response> => {
   return response;
 };
 
-const port = parseInt(process.env.PORT || "3000", 10);
 Bun.serve({
-  port: port,
+  port: Bun.env.PORT || 3000,
   hostname: "0.0.0.0",
   fetch: corsMiddleware,
 });
