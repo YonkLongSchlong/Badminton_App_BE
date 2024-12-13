@@ -1,7 +1,9 @@
+# Build stage
 FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
+# Copy package files first for better caching
 COPY package.json bun.lockb ./
 RUN bun install --frozen-lockfile
 
@@ -9,7 +11,7 @@ RUN bun install --frozen-lockfile
 COPY . ./
 
 # Build the binary
-RUN bun build index.ts --compile --outfile server
+RUN bun build main.ts --compile --outfile server
 
 # Final stage
 FROM debian:bookworm-slim
