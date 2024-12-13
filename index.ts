@@ -31,6 +31,5 @@ const corsMiddleware = async (req: Request): Promise<Response> => {
 
 Bun.serve({
   port: 5000,
-  hostname: Bun.env.HOST_API as string,
   fetch: corsMiddleware,
 });
