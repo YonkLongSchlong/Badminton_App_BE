@@ -16,8 +16,10 @@ import { questionRoutes } from "./src/routes/questionRoutes";
 import { openAIRoutes } from "./src/routes/openAIRoutes";
 import { reviewRoutes } from "./src/routes/reviewRoutes";
 import { userLessonRoutes } from "./src/routes/userLessonRoutes";
+import { swaggerUI } from "@hono/swagger-ui";
 
 const app = new Hono().basePath("/api/v1");
+app.get("/ui", swaggerUI({ url: "/doc" }));
 
 app.use(logger());
 
