@@ -1,5 +1,8 @@
 [phase.setup]
 nixpkgsArchive = "d05592ea7e9656648093dfe0e817819486bd5054"
 
+[phases.install]
+cmd = "bun install"
+
 [start]
-cmd = "bun install && bun db:migrate && bun run start"
+cmd = "bun db:migrate && bun run start"
