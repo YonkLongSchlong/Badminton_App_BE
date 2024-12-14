@@ -11,6 +11,7 @@
     "build": "bun build index.ts --compile --outfile server"
   },
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.5.9",
     "@types/bun": "latest",
     "@types/nodemailer": "^6.4.16",
     "drizzle-kit": "^0.24.2",

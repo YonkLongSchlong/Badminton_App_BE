@@ -1,11 +1,10 @@
 import app from "./app";
 
-// // Define a CORS middleware
 const corsMiddleware = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "https://badminton-admin.vercel.app", // Replace with your frontend's URL
         "Access-Control-Allow-Methods":
           "GET, POST, PUT, PATCH, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -14,9 +13,17 @@ const corsMiddleware = async (req: Request): Promise<Response> => {
     });
   }
 
+  const origin = req.headers.get("Origin");
+  const allowedOrigin = "https://badminton-admin.vercel.app";
   const response = await app.fetch(req);
 
-  response.headers.set("Access-Control-Allow-Origin", "*");
+  if (origin === allowedOrigin) {
+    response.headers.set("Access-Control-Allow-Origin", allowedOrigin);
+  } else {
+    // Optionally, handle other scenarios like rejecting with a CORS error or applying a fallback policy
+    response.headers.set("Access-Control-Allow-Origin", "*"); // Fallback to wildcard (or handle as necessary)
+  }
+
   response.headers.set(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, PATCH, DELETE, OPTIONS"
@@ -30,7 +37,7 @@ const corsMiddleware = async (req: Request): Promise<Response> => {
 };
 
 Bun.serve({
-  port: Bun.env.PORT || 3000,
+  port: Number.parseInt(Bun.env.PORT as string) || 3000,
   hostname: "0.0.0.0",
   fetch: corsMiddleware,
 });
