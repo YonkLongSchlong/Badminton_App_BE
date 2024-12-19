@@ -29,6 +29,20 @@
       "when": 1734095114517,
       "tag": "0003_broad_madrox",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1734592062425,
+      "tag": "0004_steep_rattler",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1734592093469,
+      "tag": "0005_previous_stick",
+      "breakpoints": true
     }
   ]
 }

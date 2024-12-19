@@ -9,6 +9,7 @@ import { courses } from "./course";
 import { paidLesson } from "./paid_lesson";
 import { review } from "./review";
 import { question } from "./question";
+import { userLesson } from "./user_lesson";
 
 export const courseStatus = pgEnum("status", ["publish", "non-publish"]);
 
@@ -17,7 +18,7 @@ export const paidCourse = pgTable("paid_course", {
   price: decimal("price"),
   lessonQuantity: integer("lesson_quantity").default(0),
   studentQuantity: integer("student_quantity").default(0),
-  status: courseStatus("status"),
+  status: courseStatus("status").default("non-publish"),
   star: real("star").default(0),
   coachId: integer("coach_id")
     .references(() => coach.id)
@@ -37,6 +38,7 @@ export const paidCourseRelations = relations(paidCourse, ({ one, many }) => ({
   }),
   coach: one(coach, { fields: [paidCourse.coachId], references: [coach.id] }),
   question: many(question),
+  userLesson: many(userLesson),
 }));
 
 export const paidCourseCreateSchema = createInsertSchema(paidCourse, {

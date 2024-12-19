@@ -32,13 +32,23 @@ export const getUserCourseByUserId = async (userId: number) => {
   });
 };
 
+export const getUserCourseByStatusFinished = async (userId: number) => {
+  return await db.query.user_course.findMany({
+    where: and(eq(user_course.status, 2), eq(user_course.user_id, userId)),
+  });
+};
+
+export const getUserCourseByStatusOngoing = async (userId: number) => {
+  return await db.query.user_course.findMany({
+    where: and(eq(user_course.status, 1), eq(user_course.user_id, userId)),
+  });
+};
+
 export const createUserCourse = async (data: UserCourseCreateSchema) => {
   return await db.insert(user_course).values(data).returning();
 };
 
 export const updateUserCourseForPaidCourse = async (
-  userId: number,
-  paidCourseId: number,
   data: UserCourseUpdateSchema
 ) => {
   const [check] = await db
@@ -46,12 +56,12 @@ export const updateUserCourseForPaidCourse = async (
     .from(user_course)
     .where(
       and(
-        eq(user_course.user_id, userId),
-        eq(user_course.paid_course_id, paidCourseId)
+        eq(user_course.user_id, data.user_id),
+        eq(user_course.paid_course_id, data.paid_course_id!)
       )
     );
   if (check === undefined) {
-    throw new NotFoundError(`UserCourse with user id ${userId} not found`);
+    throw new NotFoundError(`UserCourse not found`);
   }
 
   return await db
@@ -59,16 +69,14 @@ export const updateUserCourseForPaidCourse = async (
     .set(data)
     .where(
       and(
-        eq(user_course.user_id, userId),
-        eq(user_course.paid_course_id, paidCourseId)
+        eq(user_course.user_id, data.user_id),
+        eq(user_course.paid_course_id, data.paid_course_id!)
       )
     )
     .returning();
 };
 
 export const updateUserCourseForFreeCourse = async (
-  userId: number,
-  freeCourseId: number,
   data: UserCourseUpdateSchema
 ) => {
   const [check] = await db
@@ -76,12 +84,12 @@ export const updateUserCourseForFreeCourse = async (
     .from(user_course)
     .where(
       and(
-        eq(user_course.user_id, userId),
-        eq(user_course.free_course_id, freeCourseId)
+        eq(user_course.user_id, data.user_id),
+        eq(user_course.free_course_id, data.free_course_id!)
       )
     );
   if (check === undefined) {
-    throw new NotFoundError(`UserCourse with user id ${userId} not found`);
+    throw new NotFoundError(`UserCourse not found`);
   }
 
   return await db
@@ -89,8 +97,8 @@ export const updateUserCourseForFreeCourse = async (
     .set(data)
     .where(
       and(
-        eq(user_course.user_id, userId),
-        eq(user_course.free_course_id, freeCourseId)
+        eq(user_course.user_id, data.user_id),
+        eq(user_course.free_course_id, data.free_course_id!)
       )
     )
     .returning();

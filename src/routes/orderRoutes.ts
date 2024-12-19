@@ -31,7 +31,8 @@ import { env } from "hono/adapter";
 import Stripe from "stripe";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { paidCourse, user_course } from "../db/schema";
+import { paidCourse, user, user_course } from "../db/schema";
+import { sendConfirmOrder } from "../../utils/emailUtils";
 
 export const orderRoutes = new Hono();
 
@@ -124,6 +125,12 @@ orderRoutes.post("/webhook", async (c) => {
             .set({ studentQuantity: paidCourseUpdate.studentQuantity! + 1 })
             .where(eq(paidCourse.id, orderToPay.paidCourseId)),
         ]);
+
+        const userToSendMail = await db.query.user.findFirst({
+          where: eq(user.id, orderToPay.userId),
+        });
+
+        await sendConfirmOrder(userToSendMail?.email!, orderToPay);
 
         return c.json(new ApiResponse(200, "Process payment successfully"));
       }

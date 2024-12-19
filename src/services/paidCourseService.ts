@@ -65,14 +65,18 @@ export const getPaidCourseForUser = async (
       )
     );
 
-  console.log(check);
-
   const result = await db.query.paidCourse.findFirst({
-    where: eq(paidCourse.id, course_id),
-    with: { paidLesson: true, review: true },
+    where: and(eq(paidCourse.id, course_id)),
+    with: { paidLesson: true, review: true, coach: true, userLesson: true },
   });
 
-  return { result, unlock: check === undefined ? false : true };
+  return {
+    result,
+    unlock: check === undefined ? false : true,
+    started: check == undefined ? null : check.status == 0 ? false : true,
+    ongoing: check == undefined ? null : check.status == 1 ? true : false,
+    finished: check == undefined ? null : check.status == 2 ? true : false,
+  };
 };
 
 export const getPaidCourseById = async (id: number) => {

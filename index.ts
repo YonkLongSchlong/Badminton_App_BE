@@ -4,7 +4,7 @@ const corsMiddleware = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "https://badminton-admin.vercel.app", // Replace with your frontend's URL
+        "Access-Control-Allow-Origin": "*", // Replace with your frontend's URL
         "Access-Control-Allow-Methods":
           "GET, POST, PUT, PATCH, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -14,7 +14,7 @@ const corsMiddleware = async (req: Request): Promise<Response> => {
   }
 
   const origin = req.headers.get("Origin");
-  const allowedOrigin = "https://badminton-admin.vercel.app";
+  const allowedOrigin = "*";
   const response = await app.fetch(req);
 
   if (origin === allowedOrigin) {

@@ -11,7 +11,7 @@ import { hashPassword } from "../../utils/authenticateUtils";
 import { BadRequestError, NotFoundError } from "../../types";
 import { s3Client } from "../../utils/configAWS";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { paidCourse, user_course } from "../db/schema";
+import { category, coach, paidCourse, user_course } from "../db/schema";
 
 export const createUser = async (data: UserCreateSchema) => {
   const checkUserEmail = await getUserByEmail(data.email);
@@ -107,6 +107,21 @@ export const getAllPaidCoursesUserEnrolled = async (id: number) => {
     .from(user_course)
     .where(eq(user_course.user_id, id))
     .innerJoin(paidCourse, eq(user_course.paid_course_id, paidCourse.id));
+};
+
+export const getCoachById = async (id: number) => {
+  const result = await db.query.coach.findFirst({
+    where: eq(coach.id, id),
+    with: {
+      paidCourse: {
+        with: { category: true, user_course: true },
+      },
+    },
+  });
+  if (result && result.paidCourse) {
+    result.paidCourse.sort((a, b) => b.studentQuantity! - a.studentQuantity!);
+  }
+  return result;
 };
 
 /* ------------------- PRIVATE METHOD -------------------  */

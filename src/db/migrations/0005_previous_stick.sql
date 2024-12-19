@@ -1,0 +1,1 @@
+ALTER TABLE "users_lessons" ALTER COLUMN "course_type" DROP NOT NULL;

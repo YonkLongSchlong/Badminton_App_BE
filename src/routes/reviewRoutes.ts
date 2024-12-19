@@ -85,7 +85,6 @@ reviewRoutes.delete("/:id", userAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const body = await c.req.json();
-    console.log(body);
 
     const { courseId, userId } = body;
 

@@ -118,13 +118,14 @@ userLessonRoutes.patch(
 );
 
 /**
- * GET: /user-lesson/:userId/:lessonId
+ * POST: /user-lesson/:userId
  */
-userLessonRoutes.get("/:userId/:lessonId", allRoleAuthorization, async (c) => {
+userLessonRoutes.get("/:userId", allRoleAuthorization, async (c) => {
   try {
     const userId = Number.parseInt(c.req.param("userId"));
-    const lessonId = Number.parseInt(c.req.param("lessonId"));
-    const result = await getUserLessons(userId, lessonId);
+    const { courseType, courseId } = await c.req.json();
+
+    const result = await getUserLessons(userId, courseId, courseType);
 
     return c.json(result);
   } catch (error) {

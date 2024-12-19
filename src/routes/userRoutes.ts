@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import {
   createUser,
+  getCoachById,
   getUser,
   updateUser,
   updateUserAvatar,
@@ -73,6 +74,29 @@ userRoutes.get("/:id/enrolled", userAuthorization, async (c) => {
     const user = await getUser(id);
 
     return c.json(user);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * GET: /users/coach/:id
+ */
+userRoutes.get("/coach/:id", userAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const result = await getCoachById(id);
+
+    if (result === null) {
+      return c.json(new ApiResponse(404, `Coach with id ${id} not found`), 404);
+    }
+
+    return c.json(new ApiResponse(200, `Coach deleted successfully`, result));
   } catch (error) {
     if (error instanceof NotFoundError) {
       return c.json(new ApiError(404, error.name, error.message), 404);
