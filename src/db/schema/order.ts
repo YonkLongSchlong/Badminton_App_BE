@@ -48,7 +48,8 @@ export const orderCreateSchema = createInsertSchema(order, {
 
 export const filterOrderSchema = z.object( {
   startDate: z.string(),
-  endDate: z.string()
+  endDate: z.string(),
+  coachId: z.string().optional(),
 });
 
 
