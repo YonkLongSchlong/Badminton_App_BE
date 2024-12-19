@@ -23,6 +23,7 @@ import {
   deletePaidCourse,
   getAllPaidCourse,
   getAllUserEnrollInCourse,
+  getAllPaidCourseForAdmin,
   getPaidCourseByCategoryId,
   getPaidCourseByCoachId,
   getPaidCourseById,
@@ -65,6 +66,24 @@ paidCourseRoutes.post(
 paidCourseRoutes.get("", allRoleAuthorization, async (c) => {
   try {
     const result = await getAllPaidCourse();
+    return c.json(new ApiResponse(200, `All paid course`, result));
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof Error) {
+      console.log(error);
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * GET: /paid-courses/admin
+ */
+paidCourseRoutes.get("/admin", coachAndAdminAuthorization, async (c) => {
+  try {
+    const result = await getAllPaidCourseForAdmin();
     return c.json(new ApiResponse(200, `All paid course`, result));
   } catch (error) {
     if (error instanceof NotFoundError) {
@@ -187,7 +206,7 @@ paidCourseRoutes.get(
  */
 paidCourseRoutes.patch(
   "/:id",
-  coachAuthorization,
+  coachAndAdminAuthorization,
   zValidator("json", paidCourseUpdateSchema),
   async (c) => {
     try {

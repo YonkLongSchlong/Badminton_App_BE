@@ -23,6 +23,12 @@ export const getAllPaidCourse = async () => {
   });
 };
 
+export const getAllPaidCourseForAdmin = async () => {
+  return await db.query.paidCourse.findMany({
+    with: { category: true },
+  });
+};
+
 export const getPaidCourseByCategoryId = async (categoryId: number) => {
   return await db.query.paidCourse.findMany({
     where: and(

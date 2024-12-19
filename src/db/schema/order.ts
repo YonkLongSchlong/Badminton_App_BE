@@ -46,6 +46,13 @@ export const orderCreateSchema = createInsertSchema(order, {
   stripePaymentIntentId: (schema) => schema.stripePaymentIntentId.optional(),
 });
 
+export const filterOrderSchema = z.object( {
+  startDate: z.string(),
+  endDate: z.string(),
+  coachId: z.string().optional(),
+});
+
+
 export const orderUpdateCreatedAtSchema = z.object({
   created_at: z
     .string()
@@ -68,6 +75,9 @@ export type OrderSchema = z.infer<typeof orderSchema>;
 export type OrderCreateSchema = z.infer<typeof orderCreateSchema>;
 export type OrderUpdateCreatedAtSchema = z.infer<
   typeof orderUpdateCreatedAtSchema
+>;
+export type FilterOrderSchema = z.infer<
+  typeof filterOrderSchema
 >;
 export type PaymentIntentCreateSchema = z.infer<
   typeof paymentIntentCreateSchema
