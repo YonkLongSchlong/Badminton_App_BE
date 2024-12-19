@@ -43,6 +43,20 @@
       "when": 1734592093469,
       "tag": "0005_previous_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1734622815902,
+      "tag": "0006_aromatic_purple_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1734622845049,
+      "tag": "0007_majestic_anita_blake",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,7 @@ import type { z } from "zod";
 import { courses } from "./course";
 import { freeLesson } from "./free_lesson";
 import { question } from "./question";
+import { userLesson } from "./user_lesson";
 
 export const freeCourse = pgTable("free_course", {
   ...courses,
@@ -17,6 +18,7 @@ export const freeCourse = pgTable("free_course", {
 
 export const freeCourseRelations = relations(freeCourse, ({ one, many }) => ({
   freeLesson: many(freeLesson),
+  userLesson: many(userLesson),
   category: one(category, {
     fields: [freeCourse.categoryId],
     references: [category.id],

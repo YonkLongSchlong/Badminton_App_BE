@@ -77,7 +77,15 @@ export const updateUserLessonPaidLesson = async (
     throw new NotFoundError(`User lesson not found`);
   }
 
-  await db.update(userLesson).set(data);
+  await db
+    .update(userLesson)
+    .set(data)
+    .where(
+      and(
+        eq(userLesson.userId, data.userId),
+        eq(userLesson.paidLessonId, data.paidLessonId!)
+      )
+    );
 };
 
 export const updateUserLessonFreeLesson = async (
@@ -94,7 +102,15 @@ export const updateUserLessonFreeLesson = async (
     throw new NotFoundError(`User lesson not found`);
   }
 
-  await db.update(userLesson).set(data).returning();
+  await db
+    .update(userLesson)
+    .set(data)
+    .where(
+      and(
+        eq(userLesson.userId, data.userId),
+        eq(userLesson.freeLessonId, data.freeLessonId!)
+      )
+    );
 };
 
 export const getUserLessons = async (

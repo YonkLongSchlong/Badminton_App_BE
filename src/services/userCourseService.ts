@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
-import { paidCourse, review, user_course } from "../db/schema";
+import { category, paidCourse, review, user_course } from "../db/schema";
 import type {
   ReviewCreateSchema,
   ReviewUpdateSchema,
@@ -35,12 +35,20 @@ export const getUserCourseByUserId = async (userId: number) => {
 export const getUserCourseByStatusFinished = async (userId: number) => {
   return await db.query.user_course.findMany({
     where: and(eq(user_course.status, 2), eq(user_course.user_id, userId)),
+    with: {
+      freeCourse: { with: { category: true } },
+      paidCourse: { with: { category: true } },
+    },
   });
 };
 
 export const getUserCourseByStatusOngoing = async (userId: number) => {
   return await db.query.user_course.findMany({
     where: and(eq(user_course.status, 1), eq(user_course.user_id, userId)),
+    with: {
+      freeCourse: { with: { category: true } },
+      paidCourse: { with: { category: true } },
+    },
   });
 };
 

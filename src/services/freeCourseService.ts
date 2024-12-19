@@ -8,7 +8,7 @@ import {
 import { NotFoundError } from "../../types";
 import { s3Client } from "../../utils/configAWS";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { category } from "../db/schema";
+import { category, user_course } from "../db/schema";
 
 /* -------------- FREE COURSE ------------------- */
 export const createFreeCourse = async (data: FreeCourseCreateSchema) => {
@@ -38,6 +38,30 @@ export const getFreeCourseById = async (id: number) => {
     throw new NotFoundError(`Course with id ${id} not found`);
 
   return result;
+};
+
+export const getFreeCourseByIdUser = async (id: number, userId: number) => {
+  const [check] = await db
+    .select()
+    .from(user_course)
+    .where(
+      and(eq(user_course.free_course_id, id), eq(user_course.user_id, userId))
+    );
+
+  const result = await db.query.freeCourse.findFirst({
+    where: eq(freeCourse.id, id),
+    with: { freeLesson: true, category: true, userLesson: true },
+  });
+
+  if (result === undefined)
+    throw new NotFoundError(`Course with id ${id} not found`);
+
+  return {
+    result,
+    started: check == undefined ? null : check.status == 0 ? false : true,
+    ongoing: check == undefined ? null : check.status == 1 ? true : false,
+    finished: check == undefined ? null : check.status == 2 ? true : false,
+  };
 };
 
 export const updateFreeCourse = async (

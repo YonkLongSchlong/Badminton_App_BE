@@ -40,4 +40,5 @@ Bun.serve({
   port: Number.parseInt(Bun.env.PORT as string) || 3000,
   hostname: "0.0.0.0",
   fetch: corsMiddleware,
+  idleTimeout: 20,
 });

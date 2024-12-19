@@ -1,0 +1,1 @@
+ALTER TABLE "users_courses" ALTER COLUMN "status" SET DEFAULT 0;

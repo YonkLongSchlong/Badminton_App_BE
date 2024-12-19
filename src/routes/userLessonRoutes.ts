@@ -87,6 +87,7 @@ userLessonRoutes.patch(
         return c.json(new ApiError(400, error.name, error.message), 400);
       }
       if (error instanceof Error) {
+        console.log(error);
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
     }
@@ -111,6 +112,7 @@ userLessonRoutes.patch(
         return c.json(new ApiError(400, error.name, error.message), 400);
       }
       if (error instanceof Error) {
+        console.log(error);
         return c.json(new ApiError(500, error.name, error.message), 500);
       }
     }

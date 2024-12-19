@@ -15,7 +15,9 @@ const questionTemplate = {
   questions: [
     {
       question: "Name of the question",
-      options: ["An array of string containing 4 options"],
+      options: [
+        "An array of string containing 4 options. Don't contain A, B, C, D, etc in the answer",
+      ],
       answer: "The right answer for the question",
     },
   ],
@@ -39,18 +41,18 @@ const extractTextFromBlocks = (content: any): string => {
 export const generateQuizQuestionsForFreeLesson = async (lessonId: number) => {
   try {
     const lesson = await getFreeLessonById(lessonId);
-    if (!lesson) {
+    if (lesson === undefined) {
       throw new Error(`Lesson with id ${lessonId} not found`);
     }
     const lessonContent = extractTextFromBlocks(lesson.content);
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are a helpful assistant." },
         {
           role: "user",
-          content: `Can you generate me about 5 to 7 questions, the options and the right answer for this lesson? Here is the lesson content: ${lessonContent}. Please format the response as json as follow ${questionTemplate}`,
+          content: `Can you generate me about 5 to 7 questions, the options and the answer for this lesson? Here is the lesson content: ${lessonContent}. Please format the response as json exactly as follow ${questionTemplate}`,
         },
       ],
     });
@@ -75,7 +77,9 @@ const saveQuestionsAndAnswersForFreeLesson = async (
   data: ResponseOpenAI,
   lessonId: number
 ) => {
-  for (const q of data.questions) {
+  console.log(data);
+
+  for (const q of data.questions || data) {
     const insertedQuestion = await db
       .insert(question)
       .values({
@@ -102,7 +106,7 @@ export const generateQuizQuestionsForPaidLesson = async (
 ) => {
   try {
     const lesson = await getPaidLessonById(lessonId);
-    if (!lesson) {
+    if (lesson === undefined) {
       throw new Error(`Lesson with id ${lessonId} not found`);
     }
     const lessonContent = extractTextFromBlocks(lesson.content);
@@ -137,7 +141,7 @@ const saveQuestionsAndAnswersForPaidLesson = async (
   data: ResponseOpenAI,
   lessonId: number
 ) => {
-  for (const q of data.questions) {
+  for (const q of data.questions || data) {
     const insertedQuestion = await db
       .insert(question)
       .values({

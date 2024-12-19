@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import {
   adminAuthorization,
   allRoleAuthorization,
+  userAuthorization,
 } from "../middlewares/authMiddlewares";
 import {
   freeCourseCreateSchema,
@@ -13,6 +14,7 @@ import {
   ApiResponse,
   BadRequestError,
   NotFoundError,
+  type Variables,
 } from "../../types";
 import {
   createFreeCourse,
@@ -20,12 +22,13 @@ import {
   getAllFreeCourse,
   getFreeCourseByCategoryId,
   getFreeCourseById,
+  getFreeCourseByIdUser,
   updateFreeCourse,
   updateFreeCourseThumbnail,
 } from "../services/freeCourseService";
 import { HTTPException } from "hono/http-exception";
 
-export const freeCourseRoutes = new Hono();
+export const freeCourseRoutes = new Hono<{ Variables: Variables }>();
 
 /**
  * POST: /free-course
@@ -78,6 +81,29 @@ freeCourseRoutes.get("/:id", allRoleAuthorization, async (c) => {
   try {
     const id = Number.parseInt(c.req.param("id"));
     const result = await getFreeCourseById(id);
+
+    return c.json(result);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return c.json(new ApiError(404, error.name, error.message), 404);
+    }
+    if (error instanceof HTTPException) {
+      return c.json(new ApiError(401, error.name, error.message), 403);
+    }
+    if (error instanceof Error) {
+      return c.json(new ApiError(500, error.name, error.message), 500);
+    }
+  }
+});
+
+/**
+ * GET: /free-course/:id/user
+ */
+freeCourseRoutes.get("/:id/user", userAuthorization, async (c) => {
+  try {
+    const id = Number.parseInt(c.req.param("id"));
+    const userId = c.get("userId");
+    const result = await getFreeCourseByIdUser(id, userId);
 
     return c.json(result);
   } catch (error) {
