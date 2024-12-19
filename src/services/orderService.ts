@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
 import { db } from "../db";
 import {
   order,
@@ -165,4 +165,52 @@ export const updateCreatedAtOrder = async (
     .set(updatedData)
     .where(eq(order.id, id))
     .returning();
+};
+
+export const filterOrdersByDate = async (
+  startDate: string,
+  endDate: string
+) => {
+  try {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new Error(
+        "Invalid date format. Please provide valid start and end dates."
+      );
+    }
+
+    const orders = await db
+      .select({
+        createdAt: order.created_at,
+        totalAmount: order.total,
+      })
+      .from(order)
+      .where(and(gte(order.created_at, start), lte(order.created_at, end))).orderBy(order.created_at);
+
+    const revenueByDay: { [key: string]: number } = {};
+
+    orders.forEach((order) => {
+      const dateKey = new Date(order.createdAt).toISOString().split("T")[0]; // Format YYYY-MM-DD
+
+      if (!revenueByDay[dateKey]) {
+        revenueByDay[dateKey] = 0;
+      }
+
+      revenueByDay[dateKey] += (Number(order.totalAmount) || 0) * 1000;
+    });
+
+    const revenueData = Object.keys(revenueByDay).map((date) => ({
+      date,
+      revenue: revenueByDay[date],
+    }));
+
+    return revenueData;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw error;
+  }
 };

@@ -8,6 +8,7 @@ import {
 import {
   createOrder,
   createStripeIntent,
+  filterOrdersByDate,
   getAllOrderForCoach,
   getAllOrders,
   getRevenueByMonth,
@@ -16,6 +17,7 @@ import {
   updateCreatedAtOrder,
 } from "../services/orderService";
 import {
+  filterOrderSchema,
   order,
   orderCreateSchema,
   orderUpdateCreatedAtSchema,
@@ -245,3 +247,30 @@ orderRoutes.patch(
     }
   }
 );
+
+/**
+ * POST: /order/filter
+ */
+orderRoutes.post(
+  "/filter",
+  coachAndAdminAuthorization,
+  zValidator("json", filterOrderSchema),
+  async (c) => {
+    try {
+      const data = c.req.valid("json"); 
+
+      const { startDate, endDate } = data;
+      const orders = await filterOrdersByDate(startDate, endDate);
+
+      return c.json(new ApiResponse(200, "Orders fetched successfully", orders));
+    } catch (error) {
+      if (error instanceof BadRequestError) {
+        return c.json(new ApiError(400, error.name, error.message), 400);
+      }
+      if (error instanceof Error) {
+        return c.json(new ApiError(500, error.name, error.message), 500);
+      }
+    }
+  }
+);
+
